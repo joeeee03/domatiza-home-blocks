@@ -1,7 +1,7 @@
 /* ===================================
    Design System Tokens
    =================================== */
-:root {
+:root, :host {
   /* Color — Primario (Verde Río) */
   --color-primary-700: #0D3733;
   --color-primary-600: #144C46;
