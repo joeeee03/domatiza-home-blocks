@@ -1,0 +1,32 @@
+/* ===================================
+   @domatiza/home-blocks — CSS compartido
+   ===================================
+   Fase 2 v2, Etapa 12: estos 11 archivos vivían en
+   public/src/styles/css/ (parte de main.css, orden original:
+   01→05 en "Archivos Base", 07/08/10/11/14/15 intercalados en
+   "Archivos de Secciones"). Se movieron acá tal cual — sin tocar una
+   sola línea de su contenido — porque son el CSS que necesitan las 6
+   vistas puras que se extraen en la Etapa 13.
+
+   El orden de los @import de abajo respeta el mismo orden relativo
+   que tenían entre sí en el main.css viejo (importa para la cascada:
+   variables antes que todo, base antes que los componentes) — no se
+   reordenó nada, sólo se sacaron del medio los archivos que se
+   quedan en public/ (06, 09, 12, 13, 16...), que no forman parte de
+   las 6 secciones con contenido editable de esta fase.
+*/
+
+/* Fundacionales — las necesitan las 6 vistas: .container, .btn*, tipografía base, tokens de color. */
+@import url('01-variables.css');
+@import url('02-base.css');
+@import url('03-typography.css');
+@import url('04-layout.css');
+@import url('05-buttons.css');
+
+/* Específicos de cada una de las 6 secciones con contenido editable. */
+@import url('07-hero.css');
+@import url('08-trust-bar.css');
+@import url('10-why-choose.css');
+@import url('11-coverage.css');
+@import url('14-about.css');
+@import url('15-testimonials.css');

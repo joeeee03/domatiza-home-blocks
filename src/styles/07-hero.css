@@ -1,0 +1,135 @@
+/* ===================================
+   Hero Section
+   =================================== */
+section.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 72px; /* debe igualar --header-h en .header */
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(13, 55, 51, 0.78) 0%, rgba(13, 55, 51, 0.5) 40%, rgba(13, 55, 51, 0.72) 100%),
+              url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=1920&h=1080&fit=crop') center/cover no-repeat;
+  z-index: -1;
+}
+
+.hero-content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  color: white;
+}
+
+.hero h1 {
+  color: white;
+  margin-bottom: var(--space-4);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
+}
+
+.hero-subtitle {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: var(--space-12);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Search Box */
+.search-box {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-xl);
+  margin-bottom: var(--space-8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-toggle {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.search-toggle-btn {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-alt);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.search-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.search-toggle-btn.active:focus-visible {
+  box-shadow: 0 0 0 3px rgba(20, 76, 70, 0.3);
+}
+
+.search-toggle-btn.active {
+  background: var(--color-primary-600);
+  color: white;
+}
+
+.search-fields {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.search-field {
+  flex: 1;
+}
+
+.search-select {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.search-select:focus {
+  outline: none;
+  border-color: var(--color-primary-600);
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.search-select:hover {
+  border-color: var(--color-primary-600);
+}
+
+.btn-search {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.hero-cta {
+  margin-top: var(--space-4);
+}
+
+.hero-cta .btn {
+  color: white;
+}

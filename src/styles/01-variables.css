@@ -1,0 +1,76 @@
+/* ===================================
+   Design System Tokens
+   =================================== */
+:root {
+  /* Color — Primario (Verde Río) */
+  --color-primary-700: #0D3733;
+  --color-primary-600: #144C46;
+  --color-primary-100: #E7EFEE;
+
+  /* Color — Secundario (Terracota) */
+  --color-secondary-700: #7C3419;
+  --color-secondary-600: #A24725;
+  --color-secondary-500: #C1592F;
+  --color-secondary-100: #FBEAE1;
+
+  /* Color — Acento (Ocre Pampeano) */
+  --color-accent-600: #D6A429;
+  --color-accent-100: #FBF1DC;
+
+  /* Color — Neutros */
+  --color-bg-page: #F6F7F6;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-alt: #ECEDEB;
+  --color-border: #DADDDA;
+  /* Borde con contraste real (~3.1:1 sobre blanco) para elementos que
+     necesitan leerse como distinguibles/clickeables por sí solos, sin
+     depender sólo de una sombra suave — --color-border (#DADDDA) da
+     ~1.3:1 contra blanco, invisible en pantallas con poco brillo. */
+  --color-border-strong: #8C9390;
+  --color-text-secondary: #4A5250;
+  --color-text-primary: #1B2523;
+
+  /* Color — Semánticos */
+  --color-success: #2E7D4F;
+  --color-error: #C0392B;
+  --color-whatsapp: #25D366;
+
+  /* Tipografía */
+  --font-display: 'Bitter', serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* Marca — altura del isotipo compartida entre header y footer, así el
+     logo se ve exactamente del mismo tamaño en los dos lugares. El
+     breakpoint mobile la reduce a 34px (ver 23-responsive.css). */
+  --brand-logo-h: 42px;
+
+  /* Espaciado (base 8px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* Layout */
+  --container-max: 1280px;
+
+  /* Radios */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 999px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 3px rgba(27, 37, 35, 0.08), 0 1px 2px rgba(27, 37, 35, 0.04);
+  --shadow-md: 0 4px 12px rgba(27, 37, 35, 0.10), 0 2px 4px rgba(27, 37, 35, 0.06);
+  --shadow-lg: 0 8px 24px rgba(27, 37, 35, 0.14), 0 4px 8px rgba(27, 37, 35, 0.08);
+  --shadow-xl: 0 16px 48px rgba(27, 37, 35, 0.18), 0 8px 16px rgba(27, 37, 35, 0.10);
+  --shadow-focus-ring: 0 0 0 3px rgba(20, 76, 70, 0.18);
+}

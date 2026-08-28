@@ -1,0 +1,172 @@
+/* ===================================
+   Base Styles
+   =================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animación de loading spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Skeleton loading animation */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton-image,
+.skeleton-title,
+.skeleton-price,
+.skeleton-spec,
+.skeleton-description {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.property-detail-skeleton {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin: 40px 0;
+}
+
+.skeleton-gallery {
+  height: 400px;
+  border-radius: 12px;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.skeleton-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.skeleton-title {
+  height: 40px;
+  border-radius: 8px;
+  width: 80%;
+}
+
+.skeleton-price {
+  height: 50px;
+  border-radius: 8px;
+  width: 40%;
+}
+
+.skeleton-specs {
+  display: flex;
+  gap: 15px;
+}
+
+.skeleton-spec {
+  height: 60px;
+  width: 100px;
+  border-radius: 8px;
+}
+
+.skeleton-description {
+  height: 20px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* Skeleton Cards para grid de propiedades */
+.property-card-skeleton {
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.skeleton-card-image {
+  height: 200px;
+  width: 100%;
+}
+
+.skeleton-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-card-price {
+  height: 30px;
+  width: 50%;
+  border-radius: 6px;
+}
+
+.skeleton-card-title {
+  height: 24px;
+  width: 80%;
+  border-radius: 6px;
+}
+
+.skeleton-card-specs {
+  display: flex;
+  gap: 10px;
+}
+
+.skeleton-card-spec {
+  height: 20px;
+  width: 60px;
+  border-radius: 4px;
+}
+
+/* Los navegadores NO heredan tipografía en botones/inputs/selects por
+   defecto (usan la fuente del sistema) — por eso un <button> al lado
+   de un <a> con el mismo padding puede verse "descentrado". Esto lo
+   iguala en todo el sitio. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--color-primary-600);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+a:hover {
+  color: var(--color-secondary-600);
+}

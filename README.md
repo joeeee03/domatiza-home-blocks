@@ -1,4 +1,4 @@
-# @puyella/home-blocks
+# @domatiza/home-blocks
 
 Paquete compartido entre `admin` y `public` para el motor de renderizado
 compartido del Editor de página (Fase 2 v2, Opción B). Documentación
@@ -11,7 +11,7 @@ El paquete exporta `.ts`/`.tsx` fuente directo (no hay `tsc`/`rollup`/
 `tsup` generando un `dist/`). Cada consumidor lo transpila con su
 propio bundler:
 
-- **`public`** (Next 16.3): necesita `transpilePackages: ['@puyella/home-blocks']`
+- **`public`** (Next 16.3): necesita `transpilePackages: ['@domatiza/home-blocks']`
   en `next.config.ts` — si no, Next no aplica su loader (SWC) a un
   paquete de `node_modules` que viene en TS/TSX sin compilar y el
   build falla.
@@ -20,13 +20,13 @@ propio bundler:
   igual que cualquier import propio). Si en el futuro aparece un error
   de sintaxis JSX no reconocida o el HMR no detecta cambios del
   paquete, el ajuste a probar primero es
-  `optimizeDeps.exclude: ['@puyella/home-blocks']`.
+  `optimizeDeps.exclude: ['@domatiza/home-blocks']`.
 
 ## Cómo se conecta cada repo
 
 Pensado como submódulo git (`admin/packages/home-blocks`,
 `public/packages/home-blocks`), consumido como dependencia
-`"@puyella/home-blocks": "file:./packages/home-blocks"` en cada
+`"@domatiza/home-blocks": "file:./packages/home-blocks"` en cada
 `package.json`.
 
 **Advertencia operativa:** `npm install` con una dependencia `file:`

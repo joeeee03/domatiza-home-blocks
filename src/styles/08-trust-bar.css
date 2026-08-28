@@ -1,0 +1,31 @@
+/* ===================================
+   Trust Bar
+   =================================== */
+.trust-bar {
+  background-color: var(--color-bg-surface);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+.trust-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.trust-item i {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary-600);
+  flex-shrink: 0;
+}

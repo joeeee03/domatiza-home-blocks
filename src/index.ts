@@ -1,4 +1,4 @@
-// Barrel export de @puyella/home-blocks.
+// Barrel export de @domatiza/home-blocks.
 //
 // Se arma incremental a lo largo de la Fase 2 v2:
 //   - Etapa 11 (acá): capa de adaptación de host — Link/Image por

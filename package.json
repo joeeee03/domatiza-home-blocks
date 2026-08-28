@@ -1,5 +1,5 @@
 {
-  "name": "@puyella/home-blocks",
+  "name": "@domatiza/home-blocks",
   "version": "0.1.0",
   "private": true,
   "main": "src/index.ts",

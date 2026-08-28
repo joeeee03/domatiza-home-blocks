@@ -1,0 +1,152 @@
+/* ===================================
+   Buttons
+   =================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  padding: 14px 28px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+  text-decoration: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary-600);
+  outline-offset: 2px;
+}
+
+/* Focus styles for all interactive elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary-600);
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline when custom focus is visible */
+.btn:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.btn:disabled {
+  background-color: var(--color-bg-alt);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  padding: 12px 20px;
+  font-size: 14px;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--color-secondary-600);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-secondary-600);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(162, 71, 37, 0.25), 0 2px 4px rgba(27, 37, 35, 0.08);
+}
+
+.btn-primary:active {
+  background-color: var(--color-secondary-600);
+  color: white;
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-600);
+  border: 1.5px solid var(--color-primary-600);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-600);
+  border-color: var(--color-primary-600);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(20, 76, 70, 0.20), 0 2px 4px rgba(27, 37, 35, 0.08);
+}
+
+.btn-secondary:active {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-600);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Excepción para el botón "Tasá tu propiedad" en el header - mantener comportamiento original */
+.header-utils .btn-secondary {
+  background-color: transparent;
+  color: var(--color-primary-600);
+  border: 1.5px solid var(--color-primary-600);
+}
+
+.header-utils .btn-secondary:hover {
+  background-color: var(--color-primary-100);
+  border-color: var(--color-primary-600);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(27, 37, 35, 0.12);
+}
+
+/* Asegurar que ambos botones tengan el mismo tamaño */
+.btn-whatsapp,
+.btn-secondary {
+  min-width: 200px;
+  height: 50px;
+}
+
+.btn-tertiary {
+  background-color: transparent;
+  color: var(--color-primary-600);
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-tertiary:hover {
+  color: var(--color-secondary-600);
+}
+
+.btn-whatsapp {
+  background-color: var(--color-whatsapp);
+  color: white;
+}
+
+.btn-whatsapp:hover {
+  background-color: #25D366;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(37, 211, 102, 0.30), 0 2px 4px rgba(27, 37, 35, 0.08);
+}
+
+.btn-whatsapp:active {
+  background-color: #25D366;
+  color: white;
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-whatsapp:focus-visible {
+  outline: 2px solid var(--color-whatsapp);
+  outline-offset: 2px;
+}

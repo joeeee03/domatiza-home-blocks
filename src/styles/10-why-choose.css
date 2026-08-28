@@ -1,0 +1,66 @@
+/* ===================================
+   Why Choose Us
+   =================================== */
+.why-us {
+  background-color: var(--color-bg-alt);
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+}
+
+.why-card {
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .why-grid.why-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.why-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--color-secondary-100);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-4);
+}
+
+.why-icon i {
+  width: 32px;
+  height: 32px;
+  color: var(--color-secondary-600);
+}
+
+.why-card h3 {
+  margin-bottom: var(--space-3);
+}
+
+.why-card p {
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.why-card {
+  padding: var(--space-6);
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all 200ms ease;
+}
+
+.why-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.why-card:active {
+  transform: translateY(-2px);
+}

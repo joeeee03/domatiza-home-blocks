@@ -1,0 +1,19 @@
+/* ===================================
+   Coverage Section
+   =================================== */
+.coverage {
+  background-color: var(--color-bg-surface);
+  text-align: center;
+}
+
+.coverage-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.coverage-cta .btn {
+  min-width: 200px;
+}
