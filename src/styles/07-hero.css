@@ -5,10 +5,8 @@ section.hero {
   position: relative;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-top: 120px; /* Aumentar para compensar el header */
-  padding-bottom: var(--space-12);
+  align-items: center;
+  padding-top: 76px; /* debe igualar --header-h en .header */
   overflow: hidden;
   isolation: isolate;
 }
