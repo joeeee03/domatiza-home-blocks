@@ -6,7 +6,7 @@ section.hero {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding-top: 72px; /* debe igualar --header-h en .header */
+  padding-top: 76px; /* debe igualar --header-h en .header */
   overflow: hidden;
   isolation: isolate;
 }
