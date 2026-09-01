@@ -1,0 +1,239 @@
+/* ===================================
+   Responsive Design
+   =================================== */
+@media (min-width: 768px) {
+  /* Tablet */
+  h1 {
+    font-size: 40px;
+  }
+
+  h2 {
+    font-size: 30px;
+  }
+
+  .trust-items {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .services-grid,
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .properties-grid,
+  .testimonials-grid,
+  .blog-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-content {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cta-buttons,
+  .section-cta,
+  .coverage-cta {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .container {
+    padding: 0 var(--space-8);
+  }
+
+  /* Tablet-specific improvements */
+  .search-box {
+    padding: var(--space-8) var(--space-12);
+  }
+
+  .hero-subtitle {
+    max-width: 700px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Desktop */
+  h1 {
+    font-size: 48px;
+  }
+
+  h2 {
+    font-size: 36px;
+  }
+
+  .services-grid,
+  .why-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .properties-grid,
+  .testimonials-grid,
+  .blog-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .container {
+    padding: 0 var(--space-12);
+  }
+
+  /* Desktop-specific improvements */
+  .search-box {
+    max-width: 900px;
+    margin: 0 auto var(--space-8);
+  }
+
+  .hero-content {
+    max-width: 900px;
+  }
+
+  .section-header {
+    margin-bottom: var(--space-16);
+  }
+}
+
+@media (min-width: 1440px) {
+  /* Large Desktop */
+  /* Properties, testimonials and blog previews only ever show 3 items —
+     kept at 3 columns (set at the 1024px tier) instead of stretching to 4,
+     which left an empty, unbalanced 4th slot on wide screens. */
+
+  .container {
+    max-width: 1440px;
+  }
+}
+
+/* Extra large screens */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1600px;
+  }
+
+  .hero-content {
+    max-width: 1000px;
+  }
+
+  .search-box {
+    max-width: 1000px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile */
+  h1 {
+    font-size: 32px;
+  }
+
+  h2 {
+    font-size: 26px;
+  }
+
+  h3 {
+    font-size: 22px;
+  }
+
+  body, :host {
+    font-size: 16px;
+  }
+
+  section.hero {
+    padding-top: 56px; /* debe igualar la altura del header en mobile */
+    min-height: auto;
+    padding-bottom: var(--space-12);
+  }
+
+  .search-fields {
+    flex-direction: column;
+  }
+
+  .search-fields .btn {
+    width: 100%;
+  }
+
+  section {
+    padding: var(--space-16) 0;
+  }
+
+  .container {
+    padding: 0 var(--space-4);
+  }
+
+  /* Mobile-specific spacing adjustments */
+  .section-header {
+    margin-bottom: var(--space-12);
+  }
+
+  .why-card,
+  .tool-card,
+  .testimonial-card {
+    padding: var(--space-6);
+  }
+
+  .service-card {
+    min-height: 240px;
+  }
+
+  .property-content {
+    padding: var(--space-4);
+  }
+}
+
+/* Extra small screens (320px). Placed AFTER the general mobile block on
+   purpose so these overrides actually win the cascade at ≤374px widths. */
+@media (max-width: 374px) {
+  .container {
+    padding: 0 var(--space-3);
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .search-toggle-btn {
+    font-size: 13px;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .btn {
+    font-size: 15px;
+  }
+
+  .search-box {
+    padding: var(--space-6);
+  }
+
+  .property-specs {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .property-actions {
+    flex-direction: column;
+  }
+
+  .property-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ===================================
+   Reduced Motion
+   =================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

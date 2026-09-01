@@ -12,11 +12,28 @@
    que tenían entre sí en el main.css viejo (importa para la cascada:
    variables antes que todo, base antes que los componentes) — no se
    reordenó nada, sólo se sacaron del medio los archivos que se
-   quedan en public/ (06, 09, 12, 13, 16...), que no forman parte de
-   las 6 secciones con contenido editable de esta fase.
+   quedan en public/ (06, 18, 19, 20, 21, 22...), que no forman parte
+   de las 11 secciones de esta fase.
+
+   Corrección posterior (fuera de la bitácora de Etapas): la Etapa 23
+   (opcional, ver README) agregó las vistas de Servicios, Destacadas,
+   Herramientas, Blog y CTA final al paquete, pero nunca se migró el
+   CSS que esas 5 secciones necesitan (09/12/13/16/17), ni el archivo
+   de breakpoints responsive (23) que las 11 vistas comparten — sin
+   él, cada grilla (.services-grid, .properties-grid,
+   .testimonials-grid, .why-grid, .blog-grid, .trust-items) y cada
+   fila de botones (.cta-buttons, .section-cta, .coverage-cta) queda
+   fija en su versión mobile de una sola columna dentro del canvas del
+   editor, sin importar el ancho real del panel. Se agregan acá los 6
+   archivos que faltaban, tal cual el contenido real de public/ (sólo
+   se recortaron, dentro de 23-responsive.css, las reglas de
+   selectores que no existen en ninguna de las 11 vistas de este
+   paquete — header, footer, nav, whatsapp flotante, contacto — para
+   no arrastrar CSS muerto; ninguna regla de una clase usada por estas
+   vistas se tocó ni se recortó).
 */
 
-/* Fundacionales — las necesitan las 6 vistas: .container, .btn*, tipografía base, tokens de color. */
+/* Fundacionales — las necesitan las 11 vistas: .container, .btn*, tipografía base, tokens de color. */
 @import url('01-variables.css');
 @import url('02-base.css');
 @import url('03-typography.css');
@@ -30,3 +47,15 @@
 @import url('11-coverage.css');
 @import url('14-about.css');
 @import url('15-testimonials.css');
+
+/* Específicos de cada una de las 5 secciones sin contenido editable (Etapa 23). */
+@import url('09-services.css');
+@import url('12-featured.css');
+@import url('13-tools.css');
+@import url('16-blog-preview.css');
+@import url('17-cta.css');
+
+/* Breakpoints compartidos por las 11 vistas — se importa al final a
+   propósito: tiene que ganar la cascada sobre los .css de arriba
+   (mismo criterio que ya tenía el main.css de public/). */
+@import url('23-responsive.css');

@@ -1,0 +1,110 @@
+/* ===================================
+   Blog Preview
+   =================================== */
+.blog-preview {
+  background-color: var(--color-bg-page);
+}
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+}
+
+.blog-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.blog-card:hover {
+  transform: translateY(-4px);
+  border-color: transparent;
+  box-shadow: var(--shadow-xl);
+}
+
+.blog-card:active {
+  transform: translateY(-2px);
+}
+
+.blog-card:focus-within {
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.blog-image {
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+
+.blog-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease;
+}
+
+.blog-card:hover .blog-image img {
+  transform: scale(1.05);
+}
+
+.blog-content {
+  padding: var(--space-6);
+}
+
+.blog-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--color-secondary-100);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-secondary-700);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-3);
+}
+
+.blog-card h3 {
+  font-size: 18px;
+  line-height: 1.35;
+  margin-bottom: var(--space-3);
+}
+
+.blog-card p {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin-bottom: var(--space-5);
+  line-height: 1.6;
+}
+
+/* "Leer nota": antes era sólo texto suelto sin forma de botón — ahora
+   tiene el mismo peso visual que el resto de los CTA del sitio
+   (ícono que se desplaza al hover, como .blog-cta-box__button), sin
+   depender de un fondo sólido para no competir con el resto de la
+   tarjeta. */
+.blog-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-primary-600);
+}
+
+.blog-link svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 150ms ease;
+}
+
+.blog-link:hover {
+  color: var(--color-secondary-600);
+}
+
+.blog-link:hover svg {
+  transform: translateX(3px);
+}

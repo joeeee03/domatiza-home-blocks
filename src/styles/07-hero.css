@@ -5,9 +5,12 @@ section.hero {
   position: relative;
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  padding-top: 72px; /* debe igualar --header-h en .header */
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 120px;
+  padding-bottom: var(--space-12);
   overflow: hidden;
+  isolation: isolate;
 }
 
 .hero-background {

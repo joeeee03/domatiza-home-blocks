@@ -1,0 +1,34 @@
+/* ===================================
+   Final CTA
+   =================================== */
+.final-cta {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-700));
+  color: white;
+  text-align: center;
+}
+
+.final-cta h2 {
+  color: white;
+  margin-bottom: var(--space-4);
+}
+
+.final-cta p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: var(--space-8);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.cta-buttons .btn {
+  width: 100%;
+  max-width: 300px;
+}

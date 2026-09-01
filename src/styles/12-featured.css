@@ -1,0 +1,169 @@
+/* ===================================
+   Featured Properties
+   =================================== */
+.featured {
+  background-color: var(--color-bg-page);
+}
+
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+}
+
+.property-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 200ms ease;
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.property-card:active {
+  transform: translateY(-2px);
+}
+
+.property-card:focus-within {
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.property-image {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+
+.property-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.property-image-link img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease, opacity 200ms ease;
+}
+
+.property-image-nav {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-3);
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 10;
+}
+
+.property-image:hover .property-image-nav {
+  opacity: 1;
+}
+
+.property-image-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms ease;
+  box-shadow: var(--shadow-md);
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.property-image-nav-btn:hover {
+  background: white;
+  transform: scale(1.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.property-image-nav-btn i {
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-primary);
+}
+
+.property-card:hover .property-image-link img {
+  transform: scale(1.04);
+}
+
+.property-badge {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: white;
+}
+
+.badge-sale {
+  background-color: var(--color-secondary-600);
+}
+
+.badge-rent {
+  background-color: var(--color-primary-600);
+}
+
+.property-content {
+  padding: var(--space-6);
+}
+
+.property-price {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-secondary-600);
+  margin-bottom: var(--space-2);
+}
+
+.property-content h3 {
+  font-size: 18px;
+  margin-bottom: var(--space-3);
+}
+
+.property-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.property-specs span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.property-specs i {
+  width: 16px;
+  height: 16px;
+}
+
+.property-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.property-actions .btn {
+  flex: 1;
+}
