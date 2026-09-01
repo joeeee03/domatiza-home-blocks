@@ -1,4 +1,4 @@
-# @puyella/home-blocks
+# @domatiza/home-blocks
 
 Paquete compartido entre `admin` y `public`, motor de renderizado
 compartido del Editor de página (Fase 2 v2, Opción B — ver el
@@ -30,7 +30,7 @@ El paquete exporta `.ts`/`.tsx` fuente directo (no hay `tsc`/`rollup`/
 `tsup` generando un `dist/`). Cada consumidor lo transpila con su
 propio bundler:
 
-- **`public`** (Next 16.3): necesita `transpilePackages: ['@puyella/home-blocks']`
+- **`public`** (Next 16.3): necesita `transpilePackages: ['@domatiza/home-blocks']`
   en `next.config.ts` — si no, Next no aplica su loader (SWC) a un
   paquete de `node_modules` que viene en TS/TSX sin compilar y el
   build falla.
@@ -38,13 +38,13 @@ propio bundler:
   (confirmado con `vite build` real). Si en el futuro aparece un error
   de sintaxis JSX no reconocida o el HMR no detecta cambios del
   paquete, el ajuste a probar primero es
-  `optimizeDeps.exclude: ['@puyella/home-blocks']`.
+  `optimizeDeps.exclude: ['@domatiza/home-blocks']`.
 
 ## Cómo se conecta cada repo
 
 Pensado como submódulo git (`admin/packages/home-blocks`,
 `public/packages/home-blocks`), consumido como dependencia
-`"@puyella/home-blocks": "file:./packages/home-blocks"` en cada
+`"@domatiza/home-blocks": "file:./packages/home-blocks"` en cada
 `package.json`.
 
 **Para conectarlo en un repo nuevo** (una sola vez):
@@ -66,7 +66,7 @@ nada que cambiar).
 **Advertencia operativa (confirmado en vivo con npm 10.9.7 — puede
 variar con otras versiones):** con esta versión de npm, una
 dependencia `file:` a un directorio local se instala como **symlink**
-(`node_modules/@puyella/home-blocks -> ../../packages/home-blocks`),
+(`node_modules/@domatiza/home-blocks -> ../../packages/home-blocks`),
 no como copia — así que en la práctica un cambio en este paquete se
 ve al toque en los dos repos consumidores, sin correr `npm install`
 de nuevo. Esto contradice lo que se asumía originalmente (que `file:`
@@ -85,10 +85,10 @@ Como el paquete no tiene build propio, la ruta de import real desde
 cualquier consumidor **incluye el prefijo `src/`**:
 
 ```css
-@import url('@puyella/home-blocks/src/styles/main.css');
+@import url('@domatiza/home-blocks/src/styles/main.css');
 ```
 
-(No `@puyella/home-blocks/styles/main.css` sin `src/` — probado en
+(No `@domatiza/home-blocks/styles/main.css` sin `src/` — probado en
 vivo con `next build` real, esa ruta no resuelve porque no hay ningún
 paso de build que copie `src/` a la raíz del paquete.)
 
