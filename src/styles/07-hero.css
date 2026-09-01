@@ -1,4 +1,4 @@
-﻿/* ===================================
+/* ===================================
    Hero Section
    =================================== */
 section.hero {
@@ -6,9 +6,8 @@ section.hero {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding-top: 76px; /* debe igualar --header-h en .header */
+  padding-top: 72px; /* debe igualar --header-h en .header */
   overflow: hidden;
-  isolation: isolate;
 }
 
 .hero-background {
@@ -46,6 +45,7 @@ section.hero {
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Search Box */
 .search-box {
   background: var(--color-bg-surface);
   border-radius: var(--radius-xl);

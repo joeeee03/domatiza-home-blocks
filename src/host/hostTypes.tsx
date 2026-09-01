@@ -1,4 +1,4 @@
-import type { AnchorHTMLAttributes, ImgHTMLAttributes, JSX } from 'react';
+import type { AnchorHTMLAttributes, ImgHTMLAttributes, ReactNode } from 'react';
 
 /**
  * Tipos y defaults de la mitad de la capa de adaptación de host
@@ -36,10 +36,20 @@ export interface HostImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   alt: string;
   width?: number;
   height?: number;
+  /**
+   * Etapa 23: `next/image` soporta `fill` (la imagen ocupa 100% del
+   * contenedor posicionado más cercano, en vez de un tamaño fijo) —
+   * lo usan `ServicesView`/`PropertyCardView`/`BlogPostCardView`
+   * (tarjetas con recorte `aspect-ratio` + `object-fit: cover`, no un
+   * tamaño de imagen conocido de antemano). No es un atributo real de
+   * `<img>`, así que `DEFAULT_IMAGE` de acá abajo lo intercepta y lo
+   * traduce a CSS — nunca se lo pasa tal cual a un `<img>` nativo.
+   */
+  fill?: boolean;
 }
 
-export type HostLinkComponent = (props: HostLinkProps) => JSX.Element;
-export type HostImageComponent = (props: HostImageProps) => JSX.Element;
+export type HostLinkComponent = (props: HostLinkProps) => ReactNode;
+export type HostImageComponent = (props: HostImageProps) => ReactNode;
 
 /**
  * Lo que cada contenedor le pasa a su vista pura como props — cada
@@ -65,9 +75,15 @@ export const DEFAULT_LINK: HostLinkComponent = ({ href, children, ...rest }) => 
     {children}
   </a>
 );
-export const DEFAULT_IMAGE: HostImageComponent = ({ width, height, ...rest }) => (
-  <img width={width} height={height} {...rest} />
-);
+export const DEFAULT_IMAGE: HostImageComponent = ({ width, height, fill, style, ...rest }) =>
+  fill ? (
+    <img
+      {...rest}
+      style={{ ...style, position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+    />
+  ) : (
+    <img width={width} height={height} style={style} {...rest} />
+  );
 
 export const DEFAULT_HOST_RENDERERS: HostRenderers = {
   Link: DEFAULT_LINK,
