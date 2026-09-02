@@ -1,5 +1,6 @@
 import type { HostLinkComponent } from '../host/hostTypes';
 import { SearchFormView } from './SearchFormView';
+import { EditableText, EditableImageArea } from '../editor/Editable';
 
 export interface HeroViewProps {
   title: string;
@@ -13,11 +14,22 @@ export interface HeroViewProps {
  * pisa el `background` inline y queda el definido en `07-hero.css` —
  * mismo criterio que tenía el contenedor original: no duplicar un
  * valor por defecto en dos lugares.
+ *
+ * Editor inline: título/subtítulo se editan tocándolos directo
+ * (`EditableText`); la imagen de fondo se edita tocando la sección
+ * completa del banner (`EditableImageArea` sobre el mismo `<div
+ * className="hero-background">` que ya existía — sin wrapper nuevo).
+ * Sin `<HomeBlocksEditorProvider>` en el árbol (siempre el caso en el
+ * público) las dos primitivas caen a exactamente el JSX de antes.
  */
 export function HeroView({ title, subtitle, imageUrl, Link }: HeroViewProps) {
   return (
     <section className="hero">
-      <div
+      <EditableImageArea
+        as="div"
+        fieldPath="hero.image"
+        label="Imagen de fondo"
+        hasImage={!!imageUrl}
         className="hero-background"
         style={
           imageUrl
@@ -26,11 +38,18 @@ export function HeroView({ title, subtitle, imageUrl, Link }: HeroViewProps) {
               }
             : undefined
         }
-      ></div>
+      />
       <div className="container">
         <div className="hero-content">
-          <h1>{title}</h1>
-          <p className="hero-subtitle">{subtitle}</p>
+          <EditableText as="h1" fieldPath="hero.title" label="Título" value={title} placeholder="Título del banner" />
+          <EditableText
+            as="p"
+            className="hero-subtitle"
+            fieldPath="hero.subtitle"
+            label="Subtítulo"
+            value={subtitle}
+            placeholder="Subtítulo del banner"
+          />
 
           <SearchFormView />
 

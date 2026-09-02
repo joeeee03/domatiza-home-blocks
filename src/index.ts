@@ -10,8 +10,17 @@
 //   - Etapa 14: PlaceholderSection.
 //   - Etapa 23 (opcional): las 5 vistas de las secciones sin
 //     contenido editable + whatsappLink.
+//   - Rediseño "editor inline" (Editor de página, admin): capa de
+//     adaptación de EDICIÓN — hermana de la de host, mismo patrón de
+//     Context con default no-op (`editor/EditorContext.tsx`) +
+//     primitivas `Editable*` (`editor/Editable.tsx`), usadas adentro
+//     de las 6 vistas con contenido editable. El público nunca provee
+//     el Context, así que su output queda idéntico a como estaba
+//     antes de este cambio.
 export * from './host/hostTypes';
 export * from './host/HostComponentsContext';
+export * from './editor/EditorContext';
+export * from './editor/Editable';
 export * from './icons/resolveIcon';
 export * from './lib/whatsappLink';
 export * from './views/HeroView';

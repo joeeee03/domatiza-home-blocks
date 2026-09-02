@@ -59,3 +59,11 @@
    propósito: tiene que ganar la cascada sobre los .css de arriba
    (mismo criterio que ya tenía el main.css de public/). */
 @import url('23-responsive.css');
+
+/* Overlay del editor inline (Editable.tsx) — sólo clases nuevas
+   (`.hb-editable-*`), nunca toca ni redefine ninguna clase de las 11
+   vistas. Se importa último a propósito, para ganar la cascada frente
+   a cualquier `outline`/`cursor` que ya declaren esas vistas.
+   Inofensivo en el público: sin `<HomeBlocksEditorProvider>` en el
+   árbol, ninguna de estas clases se renderiza nunca ahí. */
+@import url('24-editable-overlay.css');

@@ -1,5 +1,6 @@
-import { Star } from 'lucide-react';
 import type { HostImageComponent } from '../host/hostTypes';
+import { EditableRating, EditableText, EditableImageSlot } from '../editor/Editable';
+import { useHomeBlocksEditor } from '../editor/EditorContext';
 
 export interface TestimonialsViewItem {
   id: string;
@@ -15,7 +16,15 @@ export interface TestimonialsViewProps {
   Image: HostImageComponent;
 }
 
+/**
+ * Los 3 testimonios son filas fijas (no se agregan ni se borran desde
+ * acá, ver `TestimonialsSectionPanel.tsx` viejo) — por eso ningún
+ * `EditableRow` alrededor de la tarjeta, sólo campos sueltos: foto,
+ * calificación, texto, nombre y rol/servicio.
+ */
 export function TestimonialsView({ testimonials, Image }: TestimonialsViewProps) {
+  const editor = useHomeBlocksEditor();
+
   return (
     <section className="testimonials">
       <div className="container">
@@ -24,39 +33,71 @@ export function TestimonialsView({ testimonials, Image }: TestimonialsViewProps)
         </div>
 
         <div className="testimonials-grid">
-          {testimonials.map((testimonial) => (
-            <div className="testimonial-card" key={testimonial.id}>
-              {testimonial.rating !== null && (
-                <div
-                  className="testimonial-rating"
-                  role="img"
-                  aria-label={`Calificación: ${testimonial.rating} de 5 estrellas`}
-                >
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={i < (testimonial.rating ?? 0) ? 'star-filled' : 'star-empty'}
-                      aria-hidden="true"
+          {testimonials.map((testimonial) => {
+            const fieldPath = `testimonials.${testimonial.id}`;
+            return (
+              <div className="testimonial-card" key={testimonial.id}>
+                <EditableRating fieldPath={`${fieldPath}.rating`} value={testimonial.rating} label="Calificación" />
+                {/* Las comillas quedan afuera del campo editable a propósito
+                    (texto fijo, no forman parte del valor guardado) — así
+                    no hay que sacarlas/volver a ponerlas cada vez que se
+                    lee/escribe `.innerText` en `EditableText`. */}
+                <p className="testimonial-text">
+                  &quot;
+                  <EditableText
+                    as="span"
+                    fieldPath={`${fieldPath}.content`}
+                    label="Testimonio"
+                    value={testimonial.content}
+                    placeholder="Escribir testimonio…"
+                    singleLine={false}
+                  />
+                  &quot;
+                </p>
+                <div className="testimonial-author">
+                  <EditableImageSlot
+                    fieldPath={`${fieldPath}.photo`}
+                    label="Foto"
+                    hasImage={!!testimonial.photoUrl}
+                    wrapperStyle={{ display: 'inline-flex', flexShrink: 0 }}
+                  >
+                    <Image
+                      src={testimonial.photoUrl || '/images/property-placeholder.svg'}
+                      alt=""
+                      className="author-avatar"
+                      width={48}
+                      height={48}
                     />
-                  ))}
-                </div>
-              )}
-              <p className="testimonial-text">&quot;{testimonial.content}&quot;</p>
-              <div className="testimonial-author">
-                <Image
-                  src={testimonial.photoUrl || '/images/property-placeholder.svg'}
-                  alt=""
-                  className="author-avatar"
-                  width={48}
-                  height={48}
-                />
-                <div className="testimonial-author-info">
-                  <span className="author-name">{testimonial.name}</span>
-                  {testimonial.role && <span className="author-type">{testimonial.role}</span>}
+                  </EditableImageSlot>
+                  <div className="testimonial-author-info">
+                    <EditableText
+                      as="span"
+                      className="author-name"
+                      fieldPath={`${fieldPath}.name`}
+                      label="Nombre"
+                      value={testimonial.name}
+                      placeholder="Nombre"
+                    />
+                    {/* Igual que antes: sin editor activo (público) y sin rol
+                        cargado, no se renderiza nada — nunca un
+                        `<span className="author-type">` vacío. Con el editor
+                        activo sí se muestra (aunque esté vacío) para poder
+                        tocarlo y cargar uno. */}
+                    {(editor || testimonial.role) && (
+                      <EditableText
+                        as="span"
+                        className="author-type"
+                        fieldPath={`${fieldPath}.role`}
+                        label="Servicio"
+                        value={testimonial.role ?? ''}
+                        placeholder="Servicio (opcional)"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

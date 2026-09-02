@@ -5,7 +5,10 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "peerDependencies": {
-    "react": "^18.3.1 || ^19.0.0",
-    "lucide-react": ">=0.441.0"
+    "lucide-react": ">=0.441.0",
+    "react": "^18.3.1 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18"
   }
 }

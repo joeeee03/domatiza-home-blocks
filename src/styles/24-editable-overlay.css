@@ -1,0 +1,225 @@
+/* ===================================
+   Overlay del editor visual inline (Editable.tsx)
+   ===================================
+   Sólo se aplica adentro del canvas del admin — `Editable*` no
+   renderiza ninguna de estas clases cuando no hay
+   `<HomeBlocksEditorProvider>` en el árbol (el público nunca lo
+   pone), así que este archivo es peso muerto inofensivo ahí: ninguna
+   regla de acá matchea nunca ningún elemento real del sitio público.
+*/
+
+.hb-editable-target {
+  outline: none;
+}
+
+.hb-editable-target[data-hb-editable]:hover {
+  cursor: text;
+}
+
+.hb-editable-target.hb-editing {
+  cursor: text;
+}
+
+.hb-empty {
+  opacity: 0.55;
+  font-style: italic;
+}
+
+/* Caja que envuelve un campo/fila editable — cubre exactamente el
+   elemento (inset: 0), sin afectar su tamaño (no usa `border`, usa
+   `outline`, que no participa del box model). */
+.hb-editable-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  outline: 2px solid var(--hb-color, #f97316);
+  outline-offset: 2px;
+  border-radius: 4px;
+  z-index: 40;
+}
+
+.hb-editable-overlay-orange {
+  --hb-color: #f97316;
+}
+
+.hb-editable-overlay-blue {
+  --hb-color: #2563eb;
+}
+
+.hb-editable-chip {
+  position: absolute;
+  top: -28px;
+  left: -2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 6px 6px 6px 0;
+  background: var(--hb-color, #f97316);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.hb-editable-toolbar {
+  position: absolute;
+  top: -28px;
+  right: -2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 6px;
+  background: var(--hb-color, #f97316);
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.hb-editable-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.hb-editable-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.hb-editable-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hb-editable-btn-danger:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Tile de "Agregar" al final de una lista (Barra de confianza / ¿Por
+   qué elegirnos?) — mismo tamaño/ritmo visual que las tarjetas de la
+   grilla en la que vive, con borde punteado en vez de sólido. */
+.hb-add-row-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 88px;
+  padding: var(--space-4, 16px);
+  border: 2px dashed var(--color-border, #d9dde3);
+  border-radius: var(--radius-xl, 12px);
+  color: var(--color-text-secondary, #667085);
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: transparent;
+}
+
+.hb-add-row-tile:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.hb-add-row-tile svg {
+  width: 20px;
+  height: 20px;
+}
+
+.hb-add-row-tile span {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Selector de ícono inline (IconPickerPopover) */
+.hb-icon-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  max-height: 260px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  pointer-events: auto;
+  cursor: default;
+}
+
+.hb-icon-popover-search {
+  flex-shrink: 0;
+  margin: 8px;
+  padding: 6px 8px;
+  border: 1px solid #e2e5ea;
+  border-radius: 6px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  color: #1f2430;
+  outline: none;
+}
+
+.hb-icon-popover-search:focus {
+  border-color: #2563eb;
+}
+
+.hb-icon-popover-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  padding: 0 8px 8px;
+  overflow-y: auto;
+}
+
+.hb-icon-popover-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.hb-icon-popover-btn:hover {
+  border-color: #e2e5ea;
+  background: #f5f6f8;
+  color: #1f2430;
+}
+
+.hb-icon-popover-btn-active {
+  border-color: #2563eb;
+  background: #eff4ff;
+  color: #2563eb;
+}
+
+.hb-icon-popover-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.hb-icon-popover-empty {
+  grid-column: 1 / -1;
+  padding: 16px 4px;
+  text-align: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  color: #98a2b3;
+}
