@@ -37,6 +37,7 @@ function stop<T extends ReactMouseEvent>(event: T, fn: () => void) {
 function EditableOverlay({ label, color, onSettings, onDuplicate, onDelete, onConfirm }: EditableOverlayProps) {
   return (
     <span
+      data-hb-overlay="true"
       className={`hb-editable-overlay hb-editable-overlay-${color}`}
       contentEditable={false}
       onClick={(e) => e.stopPropagation()}
@@ -73,6 +74,57 @@ function EditableOverlay({ label, color, onSettings, onDuplicate, onDelete, onCo
       </span>
     </span>
   );
+}
+
+/* =========================================================================
+ * Lectura/reversión de texto de un nodo en edición — separado de
+ * `EditableText` porque el propio overlay (chip + toolbar de
+ * `EditableOverlay`) vive como HIJO DEL DOM del nodo `contentEditable`
+ * (necesario para poder posicionarlo `absolute` sobre el campo sin
+ * envolver el tag original — ver el comentario grande de
+ * `EditableText` más abajo). Eso significa que `node.innerText` a
+ * secas devuelve el texto real MÁS la etiqueta del chip pegada al
+ * final (ej. escribir en el título daba "Bienvenidos a la
+ * inmobiliariaTítulo", y en un párrafo de "Sobre nosotros",
+ * "...Párrafo") — el bug de "aparecen palabras sueltas que no tienen
+ * nada que ver" reportado por el usuario. Estas dos funciones son la
+ * única fuente de verdad para leer/revertir el contenido: excluyen
+ * SIEMPRE el nodo marcado `data-hb-overlay` antes de tocar el texto.
+ * =======================================================================*/
+
+/**
+ * Texto real tipeado por el usuario, sin la etiqueta del chip
+ * (`data-hb-overlay`). Oculta el overlay con `display:none` justo
+ * antes de leer `innerText` (que sí respeta ese estilo al calcular el
+ * texto "visible") y lo restaura enseguida — nunca queda un cambio de
+ * estilo colgado esperando el próximo render de React.
+ */
+function readEditedText(node: HTMLElement): string {
+  const overlay = node.querySelector<HTMLElement>('[data-hb-overlay]');
+  const previousDisplay = overlay?.style.display ?? '';
+  if (overlay) overlay.style.display = 'none';
+  const text = (node.innerText ?? '').replace(/\u00A0/g, ' ').trim();
+  if (overlay) overlay.style.display = previousDisplay;
+  return text;
+}
+
+/**
+ * Revierte el nodo a `text` plano al cancelar (Escape), preservando el
+ * nodo del overlay si está presente (en vez de `node.innerText = text`,
+ * que borraría TODOS los hijos, overlay incluido). Es clave conservar
+ * el mismo nodo del overlay: React sigue creyendo que ese elemento
+ * exacto sigue en el árbol, y si el mouse sigue sobre el campo (caso
+ * normal al presionar Escape) el próximo render lo deja tal cual; si
+ * ya no corresponde mostrarlo, React lo saca él solo sin error. Borrar
+ * y recrear ese nodo a mano acá rompería esa cuenta y podía tirar
+ * "Failed to execute removeChild" más tarde.
+ */
+function restoreEditedText(node: HTMLElement, text: string) {
+  const overlay = node.querySelector<HTMLElement>('[data-hb-overlay]');
+  Array.from(node.childNodes).forEach((child) => {
+    if (child !== overlay) node.removeChild(child);
+  });
+  node.insertBefore(document.createTextNode(text), node.firstChild);
 }
 
 /* =========================================================================
@@ -138,7 +190,7 @@ export function EditableText({
     const node = ref.current;
     setEditing(false);
     if (!node || !editor) return;
-    const next = (node.innerText ?? '').replace(/\u00A0/g, ' ').trim();
+    const next = readEditedText(node);
     if (next !== initialValueRef.current) {
       if (onCommit) onCommit(next);
       else editor.onTextCommit(fieldPath, next);
@@ -146,7 +198,7 @@ export function EditableText({
   }
 
   function cancel() {
-    if (ref.current) ref.current.innerText = initialValueRef.current;
+    if (ref.current) restoreEditedText(ref.current, initialValueRef.current);
     setEditing(false);
   }
 

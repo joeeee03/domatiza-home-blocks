@@ -6,6 +6,14 @@ h1, h2, h3, h4 {
   font-weight: 700;
   line-height: 1.15;
   color: var(--color-text-primary);
+  /* Un título muy largo (o una sola palabra/URL muy larga sin
+     espacios) ahora hace salto de línea en vez de desbordar su
+     contenedor — sin esto, `section.hero { overflow: hidden }` lo
+     recortaba en silencio (texto invisible) en vez de mostrarlo
+     completo en varias líneas. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 h1 {
@@ -31,6 +39,8 @@ h4 {
 
 p {
   margin-bottom: var(--space-4);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .section-eyebrow {
