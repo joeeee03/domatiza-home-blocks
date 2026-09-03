@@ -17,6 +17,13 @@
 //     de las 6 vistas con contenido editable. El público nunca provee
 //     el Context, así que su output queda idéntico a como estaba
 //     antes de este cambio.
+//   - Auditoría del Editor de página: `chrome/` — Header/Footer NO
+//     editables, puerto visual de `public/src/components/layout/`,
+//     sólo para que el canvas del admin se vea completo. Ver el
+//     comentario grande de `chrome/HeaderChromeView.tsx`.
+export * from './chrome/chromeTypes';
+export * from './chrome/HeaderChromeView';
+export * from './chrome/FooterChromeView';
 export * from './host/hostTypes';
 export * from './host/HostComponentsContext';
 export * from './editor/EditorContext';

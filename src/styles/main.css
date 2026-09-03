@@ -31,6 +31,19 @@
    paquete — header, footer, nav, whatsapp flotante, contacto — para
    no arrastrar CSS muerto; ninguna regla de una clase usada por estas
    vistas se tocó ni se recortó).
+
+   Corrección posterior #2 (auditoría del Editor de página, ver informe):
+   se agrega acá el CSS de Header y Footer (06/19) más un archivo nuevo,
+   `26-chrome-responsive.css`, con las reglas de header/footer/nav que
+   se habían recortado de 23-responsive.css en la corrección anterior
+   (ver el comentario largo al principio de ese archivo). Esto es lo
+   que le permite a `HeaderChromeView`/`FooterChromeView` (carpeta
+   `src/chrome/`) pintarse igual que el sitio real: son "chrome" fijo,
+   sin contenido editable (el Header/Footer se editan en Configuración
+   → Empresa), pensado sólo para darle contexto visual completo a quien
+   usa el Editor de página — igual que pasó con las 5 secciones sin
+   contenido editable de la corrección anterior, ninguna regla de una
+   clase que ya existía se tocó ni se recortó.
 */
 
 /* Fundacionales — las necesitan las 11 vistas: .container, .btn*, tipografía base, tokens de color. */
@@ -39,6 +52,9 @@
 @import url('03-typography.css');
 @import url('04-layout.css');
 @import url('05-buttons.css');
+
+/* Header — chrome fijo, no editable (ver comentario de arriba). */
+@import url('06-header.css');
 
 /* Específicos de cada una de las 6 secciones con contenido editable. */
 @import url('07-hero.css');
@@ -55,10 +71,18 @@
 @import url('16-blog-preview.css');
 @import url('17-cta.css');
 
+/* Footer — chrome fijo, no editable (ver comentario de arriba). */
+@import url('19-footer.css');
+
 /* Breakpoints compartidos por las 11 vistas — se importa al final a
    propósito: tiene que ganar la cascada sobre los .css de arriba
    (mismo criterio que ya tenía el main.css de public/). */
 @import url('23-responsive.css');
+
+/* Breakpoints de header/footer/nav que 23-responsive.css no trae (ver
+   su propio comentario). Después de 23-responsive.css a propósito, por
+   la misma razón: tiene que ganar el cascade. */
+@import url('26-chrome-responsive.css');
 
 /* Overlay del editor inline (Editable.tsx) — sólo clases nuevas
    (`.hb-editable-*`), nunca toca ni redefine ninguna clase de las 11

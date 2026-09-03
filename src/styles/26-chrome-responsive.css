@@ -1,0 +1,98 @@
+/* ===================================
+   Responsive — Header / Footer / Nav
+   =================================== */
+
+/* `23-responsive.css` de ESTE paquete es una copia recortada del
+   `23-responsive.css` del público: en la Etapa 23 (Fase 2 v2) se le
+   sacaron a propósito todas las reglas de selectores que no existían
+   en ninguna de las 11 vistas editables del Home (header, footer, nav,
+   whatsapp flotante, contacto) — en ese momento el paquete no incluía
+   Header/Footer, así que esas reglas eran ruido muerto.
+
+   Ahora que `HeaderChromeView`/`FooterChromeView` (carpeta `src/chrome/`)
+   SÍ renderizan `.header`/`.footer`/`.nav` reales dentro del canvas,
+   esas reglas hacen falta de nuevo para que el header/footer se vean
+   bien en los 3 anchos de vista previa (Escritorio/Tablet/Celular) —
+   así que se traen acá, en un archivo aparte, en vez de tocar
+   `23-responsive.css` (que sigue siendo, letra por letra, la copia
+   recortada original — más fácil de auditar así, sin mezclar los dos
+   motivos de recorte).
+
+   Cada bloque de abajo es una copia EXACTA (mismos valores, mismo
+   breakpoint) del `23-responsive.css` del público — ver ese archivo
+   como fuente de verdad si hay que resincronizar esto en el futuro. */
+
+@media (min-width: 768px) {
+  /* Tablet */
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Desktop */
+  .nav {
+    display: block;
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1.2fr 1.4fr 1.1fr 0.9fr;
+    gap: 40px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  /* Entre 1024–1279px el nav completo, el logo y los utils del header
+     no entran cómodos todos juntos — se ajustan y se esconde el CTA
+     secundario hasta que hay más lugar (1280px+). */
+  .nav-list {
+    gap: var(--space-6);
+  }
+
+  .header-utils {
+    gap: var(--space-3);
+  }
+
+  .header-utils .btn-secondary {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile */
+  .header {
+    height: 56px;
+    --header-item-h: 36px;
+  }
+
+  :root,
+  :host {
+    --brand-logo-h: 34px;
+  }
+
+  /* El header en celular sólo tiene lugar para el logo y el botón de
+     hamburguesa — los botones de ícono y el CTA de texto no entran. */
+  .header-whatsapp,
+  .header-phone,
+  .header-utils .btn-secondary {
+    display: none;
+  }
+
+  .header-utils {
+    gap: var(--space-2);
+  }
+}
+
+/* Pantallas muy chicas (320px). A propósito DESPUÉS del bloque mobile
+   general de arriba, para que estas reglas ganen el cascade a partir
+   de ≤374px de ancho. */
+@media (max-width: 374px) {
+  .footer-nav {
+    column-count: 1;
+  }
+}

@@ -13,7 +13,7 @@ import {
 import { Check, Copy, Plus, Settings, Star, Trash2 } from 'lucide-react';
 import { useHomeBlocksEditor } from './EditorContext';
 import { resolveIcon } from '../icons/resolveIcon';
-import { CURATED_ICON_NAMES } from './curatedIconNames';
+import { searchIcons } from './curatedIconNames';
 
 /* =========================================================================
  * Overlay compartido (chip + toolbar) — interno, no se exporta.
@@ -138,6 +138,13 @@ function restoreEditedText(node: HTMLElement, text: string) {
  * flujo del contenido real.
  * =======================================================================*/
 
+/**
+ * Tags "inline" (no "block") entre las que puede venir `as` — sólo
+ * importa para el fix de acá abajo (contorno roto en texto que
+ * envuelve en varias líneas), el resto del componente no distingue.
+ */
+const INLINE_TAGS = new Set(['span', 'a', 'b', 'i', 'em', 'strong', 'label']);
+
 export interface EditableTextProps {
   as?: ElementType;
   fieldPath: string;
@@ -244,12 +251,41 @@ export function EditableText({
   const showOverlay = canEdit && (hovered || editing);
   const isEmpty = !editing && !value;
 
+  // Fix del contorno mal marcado en campos de varias líneas (auditoría
+  // del Editor de página): el chip/contorno naranja (`EditableOverlay`,
+  // clase `.hb-editable-overlay`) es `position: absolute; inset: 0`
+  // sobre ESTE MISMO tag (`position: relative` acá abajo). Eso anda
+  // perfecto en tags de bloque (`h1`, `p`, el `Tag` por defecto es
+  // `div`) porque generan una sola caja aunque el texto adentro
+  // envuelva en varias líneas.
+  //
+  // El problema es sólo con `as="span"` (u otro tag inline): un
+  // elemento `display: inline` que envuelve en 2+ líneas NO genera una
+  // caja rectangular única — genera un fragmento por línea, con forma
+  // rara (ancho de la primera línea, alto de todas) — es la caja
+  // contenedora que usa el overlay `absolute`, así que el contorno
+  // termina cubriendo cualquier cosa menos el texto real. Pasa
+  // puntualmente en el contenido de un Testimonio (`TestimonialsView`,
+  // `as="span"` + `singleLine={false}`, casi siempre 2-3 líneas) y,
+  // más angosto, en el texto de un ítem de Barra de confianza
+  // (`TrustBarView`, `as="span"`).
+  //
+  // El fix: forzar `display: inline-block` en el propio tag cuando es
+  // inline. Un `inline-block` sí genera una única caja rectangular
+  // aunque su contenido envuelva adentro — mismo motivo por el que
+  // funciona bien un `<button>` con texto largo. Sólo afecta el
+  // render DENTRO del canvas del editor (esta rama del componente ya
+  // está después del `if (!editor) return ...` de arriba) — el sitio
+  // público nunca pasa por acá, así que este ajuste no le puede
+  // cambiar un pixel al layout real.
+  const inlineTagFix = typeof as === 'string' && INLINE_TAGS.has(as) ? { display: 'inline-block' as const } : undefined;
+
   return (
     <Tag
       ref={ref}
       data-hb-editable={canEdit ? 'true' : undefined}
       className={`${className ?? ''} hb-editable-target${editing ? ' hb-editing' : ''}${isEmpty ? ' hb-empty' : ''}`.trim()}
-      style={{ ...style, position: 'relative' }}
+      style={{ ...style, position: 'relative', ...inlineTagFix }}
       contentEditable={canEdit && editing}
       suppressContentEditableWarning
       onMouseEnter={() => canEdit && setHovered(true)}
@@ -531,8 +567,14 @@ function IconPickerPopover({
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [onClose]);
 
-  const q = query.trim().toLowerCase();
-  const results = q ? CURATED_ICON_NAMES.filter((name) => name.toLowerCase().includes(q)) : CURATED_ICON_NAMES;
+  // Búsqueda multi-idioma (auditoría del Editor de página): antes esto
+  // filtraba `CURATED_ICON_NAMES` (~90 nombres, sólo en inglés) por
+  // substring literal. `searchIcons()` (`curatedIconNames.ts`) busca
+  // contra los ~1460 nombres seguros de `allIconNames.ts` Y contra
+  // `iconSynonyms.ts` (español), sin texto escrito devuelve el mismo
+  // set curado chico de antes — ver el comentario grande de ese
+  // archivo para el porqué de cada parte.
+  const results = searchIcons(query);
 
   return (
     <span
@@ -545,7 +587,7 @@ function IconPickerPopover({
         autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Buscar ícono…"
+        placeholder="Buscar ícono… (ej: casa, seguridad, dinero)"
         className="hb-icon-popover-search"
       />
       <span className="hb-icon-popover-grid">

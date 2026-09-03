@@ -1,0 +1,271 @@
+/* ===================================
+   Footer
+   =================================== */
+
+/* Copiado tal cual de `public/src/styles/css/19-footer.css` — mismo
+   criterio y mismas notas que el comentario al principio de
+   `06-header.css` de esta misma carpeta (leerlo primero). */
+
+.footer {
+  position: relative;
+  background-image: linear-gradient(180deg, var(--color-primary-700) 0%, #0A2C28 100%);
+  color: white;
+  padding: 52px 0 0;
+  overflow: hidden;
+}
+
+/* Línea de acento con los tres colores de marca — remata el contenido
+   de la página y anuncia el footer sin necesitar una franja pesada. */
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-accent-600) 0%, var(--color-secondary-500) 50%, var(--color-primary-600) 100%);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  margin-bottom: 32px;
+}
+
+.footer-column h3 {
+  color: white;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  position: relative;
+}
+
+.footer-column h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 26px;
+  height: 2px;
+  background: var(--color-accent-600);
+}
+
+/* La primera columna es la marca: en vez del título en mayúsculas de
+   las demás columnas, muestra el logo principal (la versión clara,
+   pensada para fondos oscuros como este). */
+.footer-logo-link {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space-1) * 1.5);
+  margin-bottom: var(--space-4);
+}
+
+/* Mismo alto que el logo del header (--brand-logo-h, ver
+   01-variables.css/23-responsive.css) para que se vea exactamente del
+   mismo tamaño en los dos lugares. El logo real es cuadrado (1:1), no
+   el rectángulo 4:1 del viejo SVG local, así que el ancho sale igual
+   al alto — mismo criterio que .logo-mark en 06-header.css. */
+.footer-logo {
+  display: block;
+  flex-shrink: 0;
+  height: var(--brand-logo-h);
+  width: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  object-position: left center;
+}
+
+/* Nombre de la inmobiliaria junto al logo — misma tipografía y tamaño
+   que en el header (.logo-text) pero siempre blanco: el footer no tiene
+   estado "scrolled", así que no necesita la transición de color.
+   A diferencia del header, acá SÍ se permite que envuelva en 2 líneas
+   (sin white-space: nowrap): la columna de marca del footer es angosta
+   en varios breakpoints (tablet, desktop con 4 columnas) y a este
+   tamaño de fuente el nombre completo no entra en una sola línea. */
+.footer-logo-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  color: #FFFFFF;
+  min-width: 0;
+}
+
+.footer-logo-link:hover {
+  opacity: 0.88;
+}
+
+.footer-logo-link:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+.footer-column p {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 14px;
+  margin-bottom: var(--space-2);
+  line-height: 1.65;
+  max-width: 32ch;
+}
+
+.footer-address {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 30ch;
+}
+
+.footer-nav,
+.footer-contact,
+.footer-legal {
+  list-style: none;
+}
+
+/* Navegación en dos columnas: son 11 enlaces y en una sola lista
+   estiraban el footer entero. Repartidos en dos, ocupan la mitad
+   de alto sin sacrificar ningún link. */
+.footer-nav {
+  column-count: 2;
+  column-gap: var(--space-5);
+}
+
+.footer-nav li {
+  break-inside: avoid;
+  margin-bottom: 10px;
+}
+
+.footer-contact li,
+.footer-legal li {
+  margin-bottom: var(--space-3);
+}
+
+.footer-nav a,
+.footer-legal a {
+  display: inline-flex;
+  align-items: baseline;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13.5px;
+  line-height: 1.4;
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.footer-nav a::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-600);
+  opacity: 0.7;
+  flex-shrink: 0;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.footer-contact a {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 150ms ease;
+}
+
+.footer-nav a:hover,
+.footer-contact a:hover,
+.footer-legal a:hover {
+  color: white;
+}
+
+.footer-nav a:hover {
+  transform: translateX(2px);
+}
+
+.footer-nav a:hover::before {
+  opacity: 1;
+  transform: scale(1.4);
+}
+
+.footer-nav a:focus-visible,
+.footer-contact a:focus-visible,
+.footer-legal a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-sm);
+}
+
+.footer-contact li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.footer-contact i {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 7px;
+  box-sizing: border-box;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-accent-600);
+}
+
+/* Redes sociales: iconos circulares que, al pasar el mouse, toman el
+   color de marca de cada red (degradé de Instagram, azul de Facebook)
+   en vez del gris genérico anterior. */
+.footer-social {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-social .social-link {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  box-shadow: none;
+}
+
+.footer-social .social-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+.footer-social .social-link:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.footer-social .social-link[aria-label="Instagram"]:hover {
+  background: linear-gradient(45deg, #f9ce34, #ee2a7b 45%, #6228d7 100%);
+}
+
+.footer-social .social-link[aria-label="Facebook"]:hover {
+  background: #1877f2;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.footer-bottom p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12.5px;
+  margin-bottom: 0;
+  line-height: 1.6;
+}

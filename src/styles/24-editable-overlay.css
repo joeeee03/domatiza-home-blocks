@@ -152,8 +152,8 @@
   z-index: 60;
   display: flex;
   flex-direction: column;
-  width: 240px;
-  max-height: 260px;
+  width: 280px;
+  max-height: 320px;
   overflow: hidden;
   border-radius: 8px;
   background: #fff;
@@ -222,4 +222,36 @@
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 12px;
   color: #98a2b3;
+}
+
+/* Etiqueta informativa del "chrome" de Header/Footer (HeaderChromeView/
+   FooterChromeView, carpeta src/chrome/) — avisa que esa franja NO se
+   edita desde acá sin necesitar que la persona la toque para
+   descubrirlo (a diferencia del resto del canvas, no hay ningún campo
+   `data-hb-editable` adentro del header/footer con el que "tropezar").
+   No es clickeable a propósito: la acción real ("Ir a Configuración →
+   Empresa") vive como link de verdad en `SectionList.tsx` del admin,
+   fuera del Shadow DOM — acá sólo hace falta avisar, no navegar. */
+.hb-chrome-badge {
+  position: absolute;
+  z-index: 1001;
+  bottom: 6px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(31, 36, 48, 0.82);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.footer .hb-chrome-badge {
+  top: 10px;
+  bottom: auto;
 }
