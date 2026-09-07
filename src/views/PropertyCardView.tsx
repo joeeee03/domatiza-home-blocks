@@ -13,8 +13,9 @@ export interface PropertyCardViewData {
   priceLabel: string;
   /** Ya formateado — ej. "120 m²" / "3 ha". */
   surfaceLabel: string;
-  rooms: number;
-  bedrooms: number;
+  /** `null` = el tipo de propiedad no usa este campo (ver Ambientes/Dormitorios en la especificación de tipos) — no se renderiza el span, en vez de mostrar "0 amb". Quién decide null vs. número es el contenedor, esta vista solo confía en lo que le pasan. */
+  rooms: number | null;
+  bedrooms: number | null;
   /** `agent.whatsapp ?? agent.phone`, ya resuelto. `undefined` = sin botón de WhatsApp visible en la tarjeta (no debería pasar en la práctica, pero la vista no asume que siempre hay). */
   whatsappNumber: string | undefined;
 }
@@ -51,18 +52,22 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
           <span>
             <Maximize aria-hidden="true" size={16} /> {property.surfaceLabel}
           </span>
-          <span>
-            <Layers aria-hidden="true" size={16} /> {property.rooms} amb
-          </span>
-          <span>
-            <Bed aria-hidden="true" size={16} /> {property.bedrooms} dorm
-          </span>
+          {property.rooms != null && (
+            <span>
+              <Layers aria-hidden="true" size={16} /> {property.rooms} amb
+            </span>
+          )}
+          {property.bedrooms != null && (
+            <span>
+              <Bed aria-hidden="true" size={16} /> {property.bedrooms} dorm
+            </span>
+          )}
         </div>
         <div className="property-actions">
           <Link href={propertyHref} className="btn btn-secondary btn-sm">
             Ver más
           </Link>
-          <a
+          
             href={whatsappLink(waMessage, property.whatsappNumber)}
             className="btn btn-whatsapp btn-sm"
             target="_blank"

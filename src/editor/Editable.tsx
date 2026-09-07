@@ -10,7 +10,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react';
-import { Check, Copy, Plus, Settings, Star, Trash2 } from 'lucide-react';
+import { Copy, Plus, Settings, Star, Trash2 } from 'lucide-react';
 import { useHomeBlocksEditor } from './EditorContext';
 import { resolveIcon } from '../icons/resolveIcon';
 import { searchIcons } from './curatedIconNames';
@@ -25,7 +25,6 @@ interface EditableOverlayProps {
   onSettings?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
-  onConfirm?: () => void;
 }
 
 function stop<T extends ReactMouseEvent>(event: T, fn: () => void) {
@@ -34,7 +33,7 @@ function stop<T extends ReactMouseEvent>(event: T, fn: () => void) {
   fn();
 }
 
-function EditableOverlay({ label, color, onSettings, onDuplicate, onDelete, onConfirm }: EditableOverlayProps) {
+function EditableOverlay({ label, color, onSettings, onDuplicate, onDelete }: EditableOverlayProps) {
   return (
     <span
       data-hb-overlay="true"
@@ -53,11 +52,6 @@ function EditableOverlay({ label, color, onSettings, onDuplicate, onDelete, onCo
         {onDuplicate && (
           <button type="button" className="hb-editable-btn" title="Duplicar" aria-label="Duplicar" onClick={(e) => stop(e, onDuplicate)}>
             <Copy aria-hidden="true" />
-          </button>
-        )}
-        {onConfirm && (
-          <button type="button" className="hb-editable-btn" title="Listo" aria-label="Listo" onClick={(e) => stop(e, onConfirm)}>
-            <Check aria-hidden="true" />
           </button>
         )}
         {onDelete && (
@@ -248,7 +242,18 @@ export function EditableText({
     return <Tag className={className} style={style}>{value}</Tag>;
   }
 
-  const showOverlay = canEdit && (hovered || editing);
+  // El chip/toolbar naranja es SOLO para "esto se puede editar,
+  // tocalo" — una vez que arranca la edición no debe seguir tapando
+  // el campo. En modo edición el contorno pasa a celeste (clase
+  // `.hb-editing` en 24-editable-overlay.css, aplicada directo sobre
+  // el propio Tag) y no hace falta ningún botón de "confirmar": el
+  // commit ya viaja por `onBlur` (clickear afuera, tabular a otro
+  // campo, etc. lo dispara solo) y por Enter/Escape en
+  // `handleKeyDown` — acá abajo. El guardado real contra la base
+  // sigue siendo un paso aparte (botón "Guardar" del Editor de
+  // página): esto sólo saca la fricción visual de tener que confirmar
+  // cada campo uno por uno mientras se escribe.
+  const showOverlay = canEdit && hovered && !editing;
   const isEmpty = !editing && !value;
 
   // Fix del contorno mal marcado en campos de varias líneas (auditoría
@@ -302,9 +307,7 @@ export function EditableText({
       onKeyDown={canEdit ? handleKeyDown : undefined}
     >
       {editing ? value : value || (canEdit ? placeholder : '')}
-      {showOverlay && (
-        <EditableOverlay label={label} color="orange" onConfirm={editing ? () => ref.current?.blur() : undefined} />
-      )}
+      {showOverlay && <EditableOverlay label={label} color="orange" />}
     </Tag>
   );
 }

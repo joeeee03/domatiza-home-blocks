@@ -18,6 +18,9 @@
 
 .hb-editable-target.hb-editing {
   cursor: text;
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .hb-empty {
