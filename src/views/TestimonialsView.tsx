@@ -59,7 +59,8 @@ export function TestimonialsView({ testimonials, Image }: TestimonialsViewProps)
                     fieldPath={`${fieldPath}.photo`}
                     label="Foto"
                     hasImage={!!testimonial.photoUrl}
-                    wrapperStyle={{ display: 'inline-flex', flexShrink: 0 }}
+                    compact
+                    wrapperStyle={{ display: 'inline-flex', flexShrink: 0, borderRadius: '9999px', overflow: 'hidden' }}
                   >
                     <Image
                       src={testimonial.photoUrl || '/images/property-placeholder.svg'}

@@ -227,6 +227,105 @@
   color: #98a2b3;
 }
 
+/* ===================================
+   Overlay de imagen (EditableImageArea / EditableImageSlot)
+   ===================================
+   A diferencia del overlay de texto (contorno fino + chip), acá la
+   señal principal es un velo oscuro sobre toda la imagen con una
+   píldora centrada (ícono de lápiz + "Cambiar imagen"/"Agregar
+   imagen") — más claro y "profesional" que el contorno genérico que
+   se usaba antes también para imágenes. Requiere que el elemento que
+   la usa como hijo tenga `position` distinto de `static` (ya sea
+   inline, como en `EditableImageSlot`, o por su propia clase, como
+   `.hero-background` en `EditableImageArea`). */
+.hb-image-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(17, 24, 39, 0.55);
+  border-radius: inherit;
+  animation: hb-image-overlay-in 120ms ease;
+}
+
+@keyframes hb-image-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hb-image-overlay-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f2430;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.hb-image-overlay-action svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Variante compacta (imágenes chicas, ej. avatar de testimonio de
+   48px): sólo el ícono, sin texto ni botón de eliminar sobredimensionado. */
+.hb-image-overlay-compact .hb-image-overlay-action {
+  padding: 7px;
+}
+
+.hb-image-overlay-delete {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.75);
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 120ms ease;
+}
+
+.hb-image-overlay-delete:hover {
+  background: #dc2626;
+}
+
+.hb-image-overlay-delete svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hb-image-overlay-compact .hb-image-overlay-delete {
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+}
+
+.hb-image-overlay-compact .hb-image-overlay-delete svg {
+  width: 10px;
+  height: 10px;
+}
+
 /* Etiqueta informativa del "chrome" de Header/Footer (HeaderChromeView/
    FooterChromeView, carpeta src/chrome/) — avisa que esa franja NO se
    edita desde acá sin necesitar que la persona la toque para

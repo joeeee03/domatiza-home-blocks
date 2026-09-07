@@ -10,7 +10,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react';
-import { Copy, Plus, Settings, Star, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Plus, Settings, Star, Trash2 } from 'lucide-react';
 import { useHomeBlocksEditor } from './EditorContext';
 import { resolveIcon } from '../icons/resolveIcon';
 import { searchIcons } from './curatedIconNames';
@@ -313,6 +313,64 @@ export function EditableText({
 }
 
 /* =========================================================================
+ * EditableImageOverlay — overlay específico para imágenes (interno, no
+ * se exporta). A diferencia del overlay de texto (contorno fino +
+ * chip con el nombre del campo), acá la señal principal es un velo
+ * oscuro sobre toda la imagen con una píldora centrada — ícono de
+ * lápiz + "Cambiar imagen"/"Agregar imagen" — el patrón que ya usan
+ * los editores visuales tipo Wix/Canva/Webflow para dejar clarísimo
+ * que esa zona es una imagen y que tocarla abre el selector. El botón
+ * de eliminar (si corresponde) queda aparte, en la esquina superior
+ * derecha, para no competir con la acción principal.
+ *
+ * El velo tiene `pointer-events: none`: el click en cualquier punto
+ * (incluida la píldora) atraviesa el overlay y llega al elemento real
+ * de abajo, que ya tiene su propio `onClick` → `editor.onImageRequest`
+ * (ver `EditableImageArea`/`EditableImageSlot`). Sólo el botón de
+ * eliminar habilita `pointer-events: auto` para poder frenar la
+ * propagación y no disparar el picker de imagen al borrar.
+ *
+ * `compact` se usa en imágenes chicas (ej. el avatar de un testimonio,
+ * 48px): esconde el texto y achica el ícono/botón para que entren
+ * bien en el espacio disponible.
+ * =======================================================================*/
+
+interface EditableImageOverlayProps {
+  label: string;
+  hasImage: boolean;
+  compact?: boolean;
+  onDelete?: () => void;
+}
+
+function EditableImageOverlay({ label, hasImage, compact, onDelete }: EditableImageOverlayProps) {
+  return (
+    <span
+      data-hb-overlay="true"
+      className={`hb-image-overlay${compact ? ' hb-image-overlay-compact' : ''}`}
+      contentEditable={false}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <span className="hb-image-overlay-action">
+        <Pencil aria-hidden="true" />
+        {!compact && <span className="hb-image-overlay-label">{hasImage ? 'Cambiar imagen' : 'Agregar imagen'}</span>}
+      </span>
+      {onDelete && (
+        <button
+          type="button"
+          className="hb-image-overlay-delete"
+          title={`Eliminar ${label.toLowerCase()}`}
+          aria-label={`Eliminar ${label.toLowerCase()}`}
+          onClick={(e) => stop(e, onDelete)}
+        >
+          <Trash2 aria-hidden="true" />
+        </button>
+      )}
+    </span>
+  );
+}
+
+/* =========================================================================
  * EditableImageArea — para una imagen que viaja como `background` CSS
  * inline sobre un `<div>` ya existente (el fondo del Hero) — el `<div>`
  * en sí es el target, sin ningún wrapper nuevo.
@@ -325,9 +383,11 @@ export interface EditableImageAreaProps {
   className?: string;
   style?: CSSProperties;
   hasImage: boolean;
+  /** Achica el overlay (sin texto) para áreas de imagen chicas. Ver `EditableImageOverlay`. */
+  compact?: boolean;
 }
 
-export function EditableImageArea({ as, fieldPath, label, className, style, hasImage }: EditableImageAreaProps) {
+export function EditableImageArea({ as, fieldPath, label, className, style, hasImage, compact }: EditableImageAreaProps) {
   const Tag = (as ?? 'div') as any; // eslint-disable-line @typescript-eslint/no-explicit-any -- componente polimorfico: Tag recibe cualquier tipo de elemento pasado por quien llama
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
@@ -355,9 +415,10 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
       }
     >
       {canEdit && hovered && (
-        <EditableOverlay
+        <EditableImageOverlay
           label={label}
-          color="orange"
+          hasImage={hasImage}
+          compact={compact}
           onDelete={hasImage && editor.onImageRemove ? () => editor.onImageRemove!(fieldPath) : undefined}
         />
       )}
@@ -381,6 +442,8 @@ export interface EditableImageSlotProps {
   hasImage: boolean;
   wrapperClassName?: string;
   wrapperStyle?: CSSProperties;
+  /** Achica el overlay (sin texto) para imágenes chicas, ej. el avatar de un testimonio. Ver `EditableImageOverlay`. */
+  compact?: boolean;
   children: ReactNode;
 }
 
@@ -390,6 +453,7 @@ export function EditableImageSlot({
   hasImage,
   wrapperClassName,
   wrapperStyle,
+  compact,
   children,
 }: EditableImageSlotProps) {
   const editor = useHomeBlocksEditor();
@@ -417,9 +481,10 @@ export function EditableImageSlot({
     >
       {children}
       {canEdit && hovered && (
-        <EditableOverlay
+        <EditableImageOverlay
           label={label}
-          color="orange"
+          hasImage={hasImage}
+          compact={compact}
           onDelete={hasImage && editor.onImageRemove ? () => editor.onImageRemove!(fieldPath) : undefined}
         />
       )}
@@ -671,7 +736,7 @@ export function EditableRow({ as, fieldPath, label, className, children, onDupli
  * inline (no se muestra nada, en vez de un botón muerto).
  * =======================================================================*/
 
-export interface AddRowTileProps {
+export interface AddRowTileProps{ 
   as?: ElementType;
   listFieldPath: string;
   label: string;
