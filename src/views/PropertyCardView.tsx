@@ -67,7 +67,7 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
           <Link href={propertyHref} className="btn btn-secondary btn-sm">
             Ver más
           </Link>
-          
+          <a 
             href={whatsappLink(waMessage, property.whatsappNumber)}
             className="btn btn-whatsapp btn-sm"
             target="_blank"
