@@ -755,6 +755,44 @@ body.mobile-menu-open .header .logo-text {
   text-align: center;
 }
 
+/* Contenedor real de la navegación dentro del menu movil a pantalla
+   completa (el <nav className="mobile-nav"> que envuelve .mobile-nav-list
+   y .mobile-menu-cta en Header.tsx). Antes no tenía ninguna regla propia:
+   ni .mobile-menu (el overlay fixed que lo centra con flexbox) ni este
+   elemento limitaban su alto ni ofrecían scroll, así que si el contenido
+   (11 links + sublinks + CTA de WhatsApp) superaba el alto disponible, no
+   había forma de llegar a lo que quedaba afuera -- el body ya está bloqueado
+   (overflow:hidden, ver Header.tsx) mientras el menu esta abierto. El limite
+   y el scroll van acá, en .mobile-nav (el hijo), y NO en .mobile-menu (el
+   padre que centra), para no romper el centrado vertical cuando el
+   contenido sí entra completo: si el contenido es mas bajo que el alto
+   disponible, .mobile-nav queda mas chico que su max-height y .mobile-menu
+   lo sigue centrando igual que antes; si lo supera, .mobile-nav se topa con
+   el limite y scrollea internamente, sin que el body se mueva. Scoped a
+   <=1023px porque es el rango real donde este menu full-screen existe: el
+   .nav de escritorio y el ocultamiento de .mobile-menu-toggle arrancan en
+   min-width:1024px (ver 26-chrome-responsive.css). */
+@media (max-width: 1023px) {
+  .mobile-nav {
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Aire al final para que el ultimo elemento (el CTA de WhatsApp) no
+       quede pegado al borde inferior cuando el menu si necesita scrollear. */
+    padding-bottom: var(--space-6);
+    /* El scroll debe seguir funcionando (touch, teclado, rueda) pero sin
+       mostrar una scrollbar que rompa la estetica del overlay a pantalla
+       completa -- mismo criterio que se usara en la Capa 4 para las tabs
+       de ficha de propiedad. */
+    scrollbar-width: none;
+  }
+
+  .mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Entrada escalonada: cada link aparece un poco después que el anterior
    cuando se abre el menú, en vez de que todo el bloque aparezca de golpe
    — le da mucho más pulido a la apertura. Sólo corre con el menú activo,

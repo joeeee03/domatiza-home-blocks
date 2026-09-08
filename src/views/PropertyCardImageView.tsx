@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type CSSProperties, type MouseEvent } from 'react';
+import { useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -64,6 +64,39 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     setIndex((i) => (i + 1) % total);
   }
 
+  // Swipe horizontal en touch, ADICIONAL a las flechas (que siguen
+  // intactas para teclado/switch/mouse) — mismo criterio que se repite
+  // en PropertyGallery.tsx (Capa 4): sólo lee posiciones de touch, nunca
+  // llama preventDefault, así el listener queda pasivo por defecto y el
+  // scroll vertical de la página nunca se bloquea. Sólo se interpreta
+  // como swipe si el desplazamiento horizontal domina claramente sobre
+  // el vertical y supera un umbral mínimo, para no dispararse por error
+  // durante un scroll normal de la lista.
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const SWIPE_THRESHOLD = 45;
+
+  function handleTouchStart(e: TouchEvent) {
+    const t = e.touches[0];
+    if (!t) return;
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || !hasMultipleImages) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const deltaX = t.clientX - start.x;
+    const deltaY = t.clientY - start.y;
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    if (deltaX < 0) {
+      setIndex((i) => (i + 1) % total);
+    } else {
+      setIndex((i) => (i - 1 + total) % total);
+    }
+  }
+
   // Precarga la foto anterior y la siguiente a la actual — sin esto,
   // la primera vez que se toca una flecha se nota el arranque de la
   // descarga. Con varias tarjetas en el listado, cada una precarga
@@ -73,7 +106,12 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
   const nextImage = hasMultipleImages ? images[(index + 1) % total] : null;
 
   return (
-    <div className="property-image" style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}>
+    <div
+      className="property-image"
+      style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
       <Link
         href={href}

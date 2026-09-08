@@ -73,4 +73,8 @@
   --shadow-lg: 0 8px 24px rgba(27, 37, 35, 0.14), 0 4px 8px rgba(27, 37, 35, 0.08);
   --shadow-xl: 0 16px 48px rgba(27, 37, 35, 0.18), 0 8px 16px rgba(27, 37, 35, 0.10);
   --shadow-focus-ring: 0 0 0 3px rgba(20, 76, 70, 0.18);
+
+  /* Safe areas (iOS notch / home indicator) */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }

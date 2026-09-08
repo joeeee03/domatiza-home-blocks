@@ -70,6 +70,20 @@
   opacity: 1;
 }
 
+/* En dispositivos touch no existe un estado :hover confiable, asi que
+   estas flechas (opacity:0 por defecto, visibles solo con la regla de
+   arriba) quedaban invisibles e inutilizables en mobile -- el swipe que
+   se agrega en PropertyCardImage.tsx/PropertyCardImageView.tsx es un
+   gesto ADICIONAL, no un reemplazo, y las flechas siguen siendo la única
+   forma de navegar con teclado/switch. @media (hover: none) sólo aplica
+   en dispositivos sin hover real: el reveal-on-hover de mouse/trackpad de
+   arriba no se toca. */
+@media (hover: none) {
+  .property-image-nav {
+    opacity: 1;
+  }
+}
+
 .property-image-nav-btn {
   width: 40px;
   height: 40px;
