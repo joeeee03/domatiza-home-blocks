@@ -220,9 +220,51 @@
   color: var(--color-accent-600);
 }
 
-/* Redes sociales: iconos circulares que, al pasar el mouse, toman el
-   color de marca de cada red (degradé de Instagram, azul de Facebook)
-   en vez del gris genérico anterior. */
+/* Base de .social-link — antes vivía sólo en
+   public/src/styles/css/18-contact.css (específico de la página de
+   Contacto), por eso nunca llegaba al canvas del Editor de página del
+   admin: ese archivo no forma parte de @domatiza/home-blocks. Se
+   centraliza acá porque este paquete es la fuente única del Footer, y
+   de paso la sigue usando también /contacto (public/main.css importa
+   este archivo primero y 18-contact.css después, así que la cascada
+   sigue funcionando igual que antes para esa página). */
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-100);
+  color: var(--color-primary-600);
+  transition: all 150ms ease;
+}
+
+.social-link:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.social-link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.social-link:active {
+  transform: translateY(0);
+}
+
+.social-link i,
+.social-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Redes sociales del footer: iconos circulares que, al pasar el mouse,
+   toman el color de marca de cada red (degradé de Instagram, azul de
+   Facebook) en vez del gris genérico anterior. Sólo pisa lo que hace
+   falta (tamaño/fondo/color de fondo oscuro) — la forma, el centrado
+   y los estados de foco/click vienen de la base .social-link de arriba. */
 .footer-social {
   display: flex;
   gap: var(--space-3);
