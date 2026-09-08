@@ -326,6 +326,83 @@
   height: 10px;
 }
 
+/* ===================================
+   Overlay "contorno + chip" de EditableImageArea (fondo de sección completa)
+   ===================================
+   Ver el comentario grande de `EditableImageAreaOverlay` en
+   Editable.tsx para el porqué de esta variante (a diferencia del velo
+   + píldora centrada de `.hb-image-overlay` de más arriba, que quedaba
+   raro atrás del título/buscador del Hero). Hoy sólo la usa el fondo
+   del Hero (`HeroView.tsx`, `.hero-background`). */
+.hb-image-area-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  outline: 2px solid #f97316;
+  outline-offset: -2px;
+  z-index: 40;
+}
+
+/* `top` fijo (no `top: -28px` como el chip de texto, `.hb-editable-chip`)
+   a propósito: el contenedor tiene `overflow: hidden` (`section.hero`
+   en `07-hero.css`) y cortaría un chip que flote por afuera de la
+   caja. El valor elegido (96px) deja el chip siempre por DEBAJO del
+   header fijo (`.header`, 76px de alto en desktop / 56px en mobile —
+   ver `06-header.css`/`26-chrome-responsive.css` —, `z-index: 1000`,
+   flota encima de todo: a una altura menor quedaría tapado). */
+.hb-image-area-chip {
+  position: absolute;
+  top: 96px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: #f97316;
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.hb-image-area-chip svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.hb-image-area-delete {
+  position: absolute;
+  top: 96px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.75);
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background-color 120ms ease;
+}
+
+.hb-image-area-delete:hover {
+  background: #dc2626;
+}
+
+.hb-image-area-delete svg {
+  width: 13px;
+  height: 13px;
+}
+
 /* Etiqueta informativa del "chrome" de Header/Footer (HeaderChromeView/
    FooterChromeView, carpeta src/chrome/) — avisa que esa franja NO se
    edita desde acá sin necesitar que la persona la toque para

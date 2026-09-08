@@ -371,6 +371,65 @@ function EditableImageOverlay({ label, hasImage, compact, onDelete }: EditableIm
 }
 
 /* =========================================================================
+ * EditableImageAreaOverlay — overlay específico de `EditableImageArea`
+ * (imagen de fondo que ocupa TODA la sección — hoy sólo el fondo del
+ * Hero). NO usa el patrón de `EditableImageOverlay` (velo oscuro +
+ * píldora centrada): justo arriba/en el medio de esa misma área va el
+ * título/subtítulo/buscador del Hero (`hero-content`), así que el velo
+ * + píldora centrada quedaba literalmente atrás del título — un choque
+ * visual raro (reportado por el usuario) en vez de una señal clara de
+ * "esto es una imagen". Acá se usa el mismo criterio que el overlay de
+ * TEXTO (`EditableOverlay`, arriba de este archivo): contorno fino +
+ * una etiqueta chica, sin tapar nada.
+ *
+ * Único ajuste respecto al overlay de texto: ese chip vive en
+ * `top: -28px` (por AFUERA de la caja, arriba) porque los campos de
+ * texto son chicos y tienen lugar libre alrededor. Acá el contenedor
+ * es la sección entera del Hero, con `overflow: hidden`
+ * (`section.hero` en `07-hero.css`) — un chip en `-28px` quedaría
+ * cortado. Por eso el chip vive ADENTRO del contorno, pegado a la
+ * esquina superior izquierda, con un `top` lo bastante grande como
+ * para quedar SIEMPRE debajo del header fijo (76px de alto en
+ * desktop / 56px en mobile, `z-index: 1000` — flota encima de todo,
+ * así que a una altura menor quedaría tapado). Ver
+ * `.hb-image-area-overlay`/`.hb-image-area-chip` en
+ * `24-editable-overlay.css`.
+ * =======================================================================*/
+
+interface EditableImageAreaOverlayProps {
+  label: string;
+  onDelete?: () => void;
+}
+
+function EditableImageAreaOverlay({ label, onDelete }: EditableImageAreaOverlayProps) {
+  return (
+    <span
+      data-hb-overlay="true"
+      className="hb-image-area-overlay"
+      contentEditable={false}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <span className="hb-image-area-chip">
+        <Pencil aria-hidden="true" />
+        {label}
+      </span>
+      {onDelete && (
+        <button
+          type="button"
+          className="hb-image-area-delete"
+          title={`Eliminar ${label.toLowerCase()}`}
+          aria-label={`Eliminar ${label.toLowerCase()}`}
+          onClick={(e) => stop(e, onDelete)}
+        >
+          <Trash2 aria-hidden="true" />
+        </button>
+      )}
+    </span>
+  );
+}
+
+/* =========================================================================
  * EditableImageArea — para una imagen que viaja como `background` CSS
  * inline sobre un `<div>` ya existente (el fondo del Hero) — el `<div>`
  * en sí es el target, sin ningún wrapper nuevo.
@@ -383,11 +442,9 @@ export interface EditableImageAreaProps {
   className?: string;
   style?: CSSProperties;
   hasImage: boolean;
-  /** Achica el overlay (sin texto) para áreas de imagen chicas. Ver `EditableImageOverlay`. */
-  compact?: boolean;
 }
 
-export function EditableImageArea({ as, fieldPath, label, className, style, hasImage, compact }: EditableImageAreaProps) {
+export function EditableImageArea({ as, fieldPath, label, className, style, hasImage }: EditableImageAreaProps) {
   const Tag = (as ?? 'div') as any; // eslint-disable-line @typescript-eslint/no-explicit-any -- componente polimorfico: Tag recibe cualquier tipo de elemento pasado por quien llama
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
@@ -415,10 +472,8 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
       }
     >
       {canEdit && hovered && (
-        <EditableImageOverlay
+        <EditableImageAreaOverlay
           label={label}
-          hasImage={hasImage}
-          compact={compact}
           onDelete={hasImage && editor.onImageRemove ? () => editor.onImageRemove!(fieldPath) : undefined}
         />
       )}

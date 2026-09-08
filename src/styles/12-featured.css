@@ -7,7 +7,7 @@
 
 .properties-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--space-8);
 }
 
@@ -17,6 +17,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: all 200ms ease;
+  min-width: 0;
 }
 
 .property-card:hover {
@@ -166,4 +167,5 @@
 
 .property-actions .btn {
   flex: 1;
+  min-width: 0;
 }
