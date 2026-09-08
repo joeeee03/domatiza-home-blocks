@@ -132,7 +132,9 @@
 
 /* Navegación en dos columnas: son 11 enlaces y en una sola lista
    estiraban el footer entero. Repartidos en dos, ocupan la mitad
-   de alto sin sacrificar ningún link. */
+   de alto sin sacrificar ningún link. Sólo desde tablet/desktop
+   (≥768px, ver el @media de abajo) — en mobile rompía el orden de
+   lectura, ver ese comentario. */
 .footer-nav {
   column-count: 2;
   column-gap: var(--space-5);
@@ -141,6 +143,27 @@
 .footer-nav li {
   break-inside: avoid;
   margin-bottom: 10px;
+}
+
+/* CAPA 8 (auditoría mobile, Parte A — hallazgo confirmado): con 2
+   columnas activas en TODO el rango mobile (era así hasta acá, salvo
+   por debajo de 374px), el orden de lectura visual no coincide con el
+   orden lógico del array de links: se leen primero los ~5-6 links de
+   la columna izquierda de arriba a abajo, y recién después aparece la
+   columna derecha, en vez de un flujo top-to-bottom simple.
+   Se elige colapsar a 1 columna en todo el rango <768px (en vez de
+   reordenar el array de `Footer.tsx` para que la lectura por columnas
+   tenga sentido) porque `Footer.tsx` no es un archivo habilitado para
+   modificar en esta capa — y además reordenar sólo tiene efecto real
+   en el rango donde hay 2 columnas, así que de cualquier forma no
+   resolvía nada por debajo de 768px sin este mismo cambio. La regla
+   existente de `26-chrome-responsive.css` (@media max-width:374px,
+   también `column-count:1`) queda redundante pero inofensiva —no se
+   toca ese archivo porque ya fue modificado por una capa anterior. */
+@media (max-width: 767px) {
+  .footer-nav {
+    column-count: 1;
+  }
 }
 
 .footer-contact li,
