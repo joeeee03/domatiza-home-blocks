@@ -106,7 +106,7 @@
   box-shadow: var(--shadow-lg);
 }
 
-.property-image-nav-btn i {
+.property-image-nav-icon {
   width: 20px;
   height: 20px;
   color: var(--color-text-primary);
@@ -169,7 +169,7 @@
   gap: var(--space-1);
 }
 
-.property-specs i {
+.property-specs-icon {
   width: 16px;
   height: 16px;
 }

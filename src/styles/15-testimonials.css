@@ -39,7 +39,8 @@
   margin-bottom: var(--space-4);
 }
 
-.testimonial-rating i {
+.star-filled,
+.star-empty {
   width: 20px;
   height: 20px;
 }

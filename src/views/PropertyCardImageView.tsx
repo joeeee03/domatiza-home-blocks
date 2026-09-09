@@ -139,10 +139,10 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
       {hasMultipleImages && (
         <div className="property-image-nav">
           <button type="button" className="property-image-nav-btn property-image-nav-prev" aria-label="Imagen anterior" onClick={goPrev}>
-            <ChevronLeft aria-hidden="true" size={18} />
+            <ChevronLeft aria-hidden="true" size={18} className="property-image-nav-icon" />
           </button>
           <button type="button" className="property-image-nav-btn property-image-nav-next" aria-label="Imagen siguiente" onClick={goNext}>
-            <ChevronRight aria-hidden="true" size={18} />
+            <ChevronRight aria-hidden="true" size={18} className="property-image-nav-icon" />
           </button>
         </div>
       )}

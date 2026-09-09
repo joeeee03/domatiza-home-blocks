@@ -22,7 +22,8 @@ export interface TrustBarViewProps {
  * Editor inline: cada ítem es una fila editable (`EditableRow`, azul,
  * duplicar/eliminar) que envuelve el MISMO `<div className="trust-item">`
  * de siempre — nunca un wrapper nuevo, para no romper `.trust-items`
- * (CSS Grid: cada tarjeta tiene que seguir siendo hija directa). Adentro,
+ * (flexbox: cada tarjeta tiene que seguir siendo hija directa, para
+ * que el centrado automático de 1 a 4 ítems funcione). Adentro,
  * ícono y texto son campos propios (`EditableIcon`/`EditableText`,
  * naranja). Al final de la grilla, una tarjeta fantasma para agregar un
  * ítem nuevo — sólo aparece si `editor.onRowAdd` existe y todavía no se
@@ -49,7 +50,7 @@ export function TrustBarView({ items }: TrustBarViewProps) {
                 onDuplicate={editor?.onRowDuplicate ? () => editor.onRowDuplicate!(fieldPath) : undefined}
                 onDelete={editor?.onRowDelete ? () => editor.onRowDelete!(fieldPath) : undefined}
               >
-                <EditableIcon fieldPath={`${fieldPath}.icon`} iconName={item.icon} label="Ícono" />
+                <EditableIcon fieldPath={`${fieldPath}.icon`} iconName={item.icon} label="Ícono" className="trust-item-icon" />
                 <EditableText as="span" fieldPath={`${fieldPath}.text`} label="Texto" value={item.text} placeholder="Texto" />
               </EditableRow>
             );

@@ -91,12 +91,12 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
             <ul className="footer-contact">
               {phone && (
                 <li>
-                  <Phone aria-hidden="true" size={18} /> <a href={`tel:${phone}`}>{phone}</a>
+                  <Phone aria-hidden="true" size={18} className="footer-contact-icon" /> <a href={`tel:${phone}`}>{phone}</a>
                 </li>
               )}
               {whatsapp && (
                 <li>
-                  <MessageCircle aria-hidden="true" size={18} />{' '}
+                  <MessageCircle aria-hidden="true" size={18} className="footer-contact-icon" />{' '}
                   <a href={whatsappLink('Hola, quiero más información', whatsapp)} target="_blank" rel="noopener">
                     WhatsApp
                   </a>
@@ -104,12 +104,12 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
               )}
               {email && (
                 <li>
-                  <Mail aria-hidden="true" size={18} /> <a href={`mailto:${email}`}>{email}</a>
+                  <Mail aria-hidden="true" size={18} className="footer-contact-icon" /> <a href={`mailto:${email}`}>{email}</a>
                 </li>
               )}
               {horarios.map((h) => (
                 <li key={`${h.dia}-${h.horario}`}>
-                  <Clock aria-hidden="true" size={18} /> {h.dia}: {h.horario}
+                  <Clock aria-hidden="true" size={18} className="footer-contact-icon" /> {h.dia}: {h.horario}
                 </li>
               ))}
             </ul>

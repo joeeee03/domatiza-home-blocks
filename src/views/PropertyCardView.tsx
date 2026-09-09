@@ -50,16 +50,16 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
         <h3>{property.title}</h3>
         <div className="property-specs">
           <span>
-            <Maximize aria-hidden="true" size={16} /> {property.surfaceLabel}
+            <Maximize aria-hidden="true" size={16} className="property-specs-icon" /> {property.surfaceLabel}
           </span>
           {property.rooms != null && (
             <span>
-              <Layers aria-hidden="true" size={16} /> {property.rooms} amb
+              <Layers aria-hidden="true" size={16} className="property-specs-icon" /> {property.rooms} amb
             </span>
           )}
           {property.bedrooms != null && (
             <span>
-              <Bed aria-hidden="true" size={16} /> {property.bedrooms} dorm
+              <Bed aria-hidden="true" size={16} className="property-specs-icon" /> {property.bedrooms} dorm
             </span>
           )}
         </div>

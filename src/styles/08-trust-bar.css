@@ -8,24 +8,85 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* Mobile-first: un ítem debajo del otro, centrados como grupo.
+   A partir de tablet (ver el media query más abajo) pasan a una
+   sola fila centrada. Se usa flexbox en vez de CSS Grid a propósito:
+   así 1, 2, 3 o 4 ítems (el admin permite hasta 4) siempre quedan
+   centrados como grupo — con la grilla de columnas fijas que había
+   antes, borrar un ítem de 4 dejaba una celda vacía en vez de
+   recentrar los 3 restantes. */
 .trust-items {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .trust-item {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
+  width: 100%;
+  max-width: 360px;
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
   font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
-.trust-item i {
+.trust-item:hover {
+  border-color: var(--color-primary-600);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* Ícono: clase propia en el <svg> que devuelve `EditableIcon`
+   (`TrustBarView.tsx`, prop `className="trust-item-icon"`). El
+   selector viejo (`.trust-item i`) no matcheaba nada desde que este
+   ítem pasó a `lucide-react` (renderiza `<svg>`, nunca `<i>`), así
+   que el ícono quedaba sin tamaño ni color propios (heredaba el gris
+   del texto, a 24px en vez de 20px).
+*/
+.trust-item-icon {
   width: 20px;
   height: 20px;
   color: var(--color-primary-600);
   flex-shrink: 0;
+}
+
+/* Tarjeta fantasma de "Agregar ítem" (sólo admin, ver `AddRowTile` en
+   Editable.tsx): mismo lenguaje visual de píldora que `.trust-item`,
+   en vez del tile cuadrado genérico de `.hb-add-row-tile` (pensado
+   para grillas verticales tipo ¿Por qué elegirnos?). Selector con
+   más especificidad que `.hb-add-row-tile` a propósito, para ganarle
+   sin tocar esa regla compartida con otras listas. */
+.trust-items .hb-add-row-tile {
+  flex-direction: row;
+  width: 100%;
+  max-width: 360px;
+  min-height: 0;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .trust-items {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-4);
+  }
+
+  .trust-item,
+  .trust-items .hb-add-row-tile {
+    width: auto;
+    max-width: none;
+  }
 }

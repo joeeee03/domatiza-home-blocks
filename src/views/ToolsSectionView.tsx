@@ -17,7 +17,7 @@ export function ToolsSectionView({ Link }: ToolsSectionViewProps) {
         <div className="tools-grid">
           <div className="tool-card">
             <div className="tool-icon" aria-hidden="true">
-              <Calculator />
+              <Calculator className="tool-icon-svg" />
             </div>
             <h3>Calculadora de ajuste de alquiler</h3>
             <p>
@@ -31,7 +31,7 @@ export function ToolsSectionView({ Link }: ToolsSectionViewProps) {
 
           <div className="tool-card">
             <div className="tool-icon" aria-hidden="true">
-              <Landmark />
+              <Landmark className="tool-icon-svg" />
             </div>
             <h3>Simulador de crédito hipotecario UVA</h3>
             <p>

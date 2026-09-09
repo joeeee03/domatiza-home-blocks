@@ -49,7 +49,7 @@ export function WhyUsView({ items, showCta, companyName, Link }: WhyUsViewProps)
                 onDelete={editor?.onRowDelete ? () => editor.onRowDelete!(fieldPath) : undefined}
               >
                 <div className="why-icon" aria-hidden="true">
-                  <EditableIcon fieldPath={`${fieldPath}.icon`} iconName={item.icon} label="Ícono" />
+                  <EditableIcon fieldPath={`${fieldPath}.icon`} iconName={item.icon} label="Ícono" className="why-icon-svg" />
                 </div>
                 <EditableText as="h3" fieldPath={`${fieldPath}.title`} label="Título" value={item.title} placeholder="Título" />
                 <EditableText

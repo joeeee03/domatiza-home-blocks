@@ -11,9 +11,9 @@
     font-size: 30px;
   }
 
-  .trust-items {
-    grid-template-columns: repeat(4, 1fr);
-  }
+  /* .trust-items ya no se controla acá: pasó a flexbox y resuelve su
+     propio breakpoint en 08-trust-bar.css (necesita `flex-direction`,
+     no `grid-template-columns`, para centrarse igual con 1 a 4 ítems). */
 
   .services-grid,
   .why-grid {
