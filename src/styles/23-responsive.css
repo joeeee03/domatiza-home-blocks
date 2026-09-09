@@ -26,6 +26,18 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  /* Home: "Propiedades destacadas" y "Novedades del mercado
+     inmobiliario" (ver .properties-grid--featured en 12-featured.css y
+     .blog-grid--preview en 16-blog-preview.css) usan flexbox en vez de
+     grid, así que grid-template-columns de arriba no les hace nada.
+     Acá se fija el ancho de columna equivalente a 2 columnas, para que
+     1 o 2 tarjetas queden centradas en vez de pegadas a la izquierda. */
+  .properties-grid.properties-grid--featured .property-card,
+  .blog-grid.blog-grid--preview .blog-card {
+    flex-basis: calc(50% - var(--space-8) / 2);
+    max-width: calc(50% - var(--space-8) / 2);
+  }
+
   .about-content {
     grid-template-columns: 1fr 1fr;
   }
@@ -70,6 +82,14 @@
   .testimonials-grid,
   .blog-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Mismo criterio que en el breakpoint de 768px de arriba, ahora con
+     el ancho de columna equivalente a 3 columnas. */
+  .properties-grid.properties-grid--featured .property-card,
+  .blog-grid.blog-grid--preview .blog-card {
+    flex-basis: calc(33.333% - var(--space-8) * 2 / 3);
+    max-width: calc(33.333% - var(--space-8) * 2 / 3);
   }
 
   .container {

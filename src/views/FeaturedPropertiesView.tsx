@@ -18,7 +18,7 @@ export function FeaturedPropertiesView({ properties, Link, Image }: FeaturedProp
           </p>
         </div>
 
-        <div className="properties-grid" aria-live="polite">
+        <div className="properties-grid properties-grid--featured" aria-live="polite">
           {properties.map((property, index) => (
             <PropertyCardView key={property.id} property={property} index={index} Link={Link} Image={Image} />
           ))}

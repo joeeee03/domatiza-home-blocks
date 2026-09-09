@@ -19,7 +19,7 @@ export function BlogPreviewView({ posts, Link, Image }: BlogPreviewViewProps) {
           </p>
         </div>
 
-        <div className="blog-grid" aria-live="polite">
+        <div className="blog-grid blog-grid--preview" aria-live="polite">
           {posts.map((post) => (
             <BlogPostCardView key={post.slug} post={post} Link={Link} Image={Image} />
           ))}

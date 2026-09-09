@@ -11,6 +11,29 @@
   gap: var(--space-8);
 }
 
+/* Home: "Propiedades destacadas" muestra siempre 1, 2 o 3 propiedades.
+   Con grid a secas, 1 o 2 tarjetas quedaban pegadas a la izquierda con
+   columnas vacías a la derecha (grid no centra items faltantes). Se
+   pasa esta sección puntual a flexbox centrado, con el mismo ancho de
+   columna por breakpoint que tendría en grid (fijado en
+   23-responsive.css) — así 1, 2 o 3 tarjetas se ven igual de bien.
+   Va con selector compuesto (.properties-grid.properties-grid--featured)
+   a propósito, para ganarle por especificidad a .properties-grid sea
+   cual sea el orden final de los archivos CSS. No afecta a /propiedades
+   (PropertyListing.tsx), que reusa .properties-grid sola, sin este
+   modificador, y sigue en grid como siempre. */
+.properties-grid.properties-grid--featured {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.properties-grid--featured .property-card {
+  flex: 0 1 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .property-card {
   background: var(--color-bg-surface);
   border-radius: var(--radius-xl);

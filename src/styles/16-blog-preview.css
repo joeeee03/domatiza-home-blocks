@@ -11,6 +11,27 @@
   gap: var(--space-8);
 }
 
+/* Home: "Novedades del mercado inmobiliario" muestra siempre 1, 2 o 3
+   notas. Mismo problema y mismo criterio que .properties-grid--featured
+   en 12-featured.css: con grid a secas, 1 o 2 tarjetas quedaban pegadas
+   a la izquierda con columnas vacías a la derecha. Se pasa esta sección
+   puntual a flexbox centrado, con el mismo ancho de columna por
+   breakpoint que tendría en grid (fijado en 23-responsive.css). No
+   afecta a /blog (BlogFilterableGrid.tsx) ni al bloque de notas
+   relacionadas de blog/[slug]/page.tsx, que reusan .blog-grid sola, sin
+   este modificador, y siguen en grid como siempre. */
+.blog-grid.blog-grid--preview {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.blog-grid--preview .blog-card {
+  flex: 0 1 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .blog-card {
   background: var(--color-bg-surface);
   border-radius: var(--radius-xl);
