@@ -38,21 +38,34 @@ export function TestimonialsView({ testimonials, Image }: TestimonialsViewProps)
             return (
               <div className="testimonial-card" key={testimonial.id}>
                 <EditableRating fieldPath={`${fieldPath}.rating`} value={testimonial.rating} label="Calificación" />
-                {/* Las comillas quedan afuera del campo editable a propósito
-                    (texto fijo, no forman parte del valor guardado) — así
-                    no hay que sacarlas/volver a ponerlas cada vez que se
-                    lee/escribe `.innerText` en `EditableText`. */}
+                {/* Las comillas van por CSS (`.testimonial-quote::before/::after`
+                    en 15-testimonials.css), nunca como texto literal acá.
+                    Motivo: en el admin, `EditableText` con `as="span"` +
+                    `singleLine={false}` fuerza `display:inline-block` sobre
+                    el propio span (fix del contorno del overlay, ver
+                    `Editable.tsx`) para que el testimonio pueda envolver en
+                    varias líneas. Ese span pasa a ocupar casi todo el ancho
+                    de la tarjeta, así que si las comillas quedan como
+                    HERMANAS de afuera (texto suelto en este `<p>`), el
+                    navegador no tiene lugar para ellas en la misma línea y
+                    manda cada una a su propia línea (apertura sola arriba,
+                    cierre sola abajo) — se ve distinto que en el público,
+                    donde ese mismo span es simplemente inline. Puestas como
+                    `::before`/`::after` DEL PROPIO span quedan siempre
+                    pegadas al primer/último carácter del texto (público Y
+                    admin), y sin tocar el valor guardado: el contenido
+                    generado por CSS nunca forma parte de `.innerText`, que
+                    es lo que lee/escribe `EditableText` al confirmar. */}
                 <p className="testimonial-text">
-                  &quot;
                   <EditableText
                     as="span"
+                    className="testimonial-quote"
                     fieldPath={`${fieldPath}.content`}
                     label="Testimonio"
                     value={testimonial.content}
                     placeholder="Escribir testimonio…"
                     singleLine={false}
                   />
-                  &quot;
                 </p>
                 <div className="testimonial-author">
                   <EditableImageSlot

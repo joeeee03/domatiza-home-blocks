@@ -63,6 +63,16 @@
   line-height: 1.7;
 }
 
+/* Comillas del testimonio: van pegadas al propio <span> del texto
+   (::before/::after), no como texto suelto en el <p> padre — así
+   quedan pegadas al primer/último carácter tanto si el span es
+   inline (público) como inline-block (admin, fix del overlay). Ver
+   el comentario en TestimonialsView.tsx. */
+.testimonial-quote::before,
+.testimonial-quote::after {
+  content: '"';
+}
+
 .testimonial-author {
   display: flex;
   align-items: center;
