@@ -34,7 +34,7 @@ export function HeroView({ title, subtitle, imageUrl, Link }: HeroViewProps) {
         style={
           imageUrl
             ? {
-                background: `linear-gradient(180deg, rgba(13, 55, 51, 0.78) 0%, rgba(13, 55, 51, 0.5) 40%, rgba(13, 55, 51, 0.72) 100%), url('${imageUrl}') center/cover no-repeat`,
+                background: `linear-gradient(180deg, rgba(13, 55, 51, 0.78) 0%, rgba(13, 55, 51, 0.65) 40%, rgba(13, 55, 51, 0.72) 100%), url('${imageUrl}') center/cover no-repeat`,
               }
             : undefined
         }

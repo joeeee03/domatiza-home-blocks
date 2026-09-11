@@ -50,7 +50,7 @@
   margin: 0 auto var(--space-4);
 }
 
-.tool-icon-svg {
+.tool-icon i {
   width: 32px;
   height: 32px;
   color: var(--color-accent-600);
@@ -58,6 +58,22 @@
 
 .tool-card h3 {
   margin-bottom: var(--space-3);
+}
+
+/* CAPA 9 (a11y): mismo tamaño que .tool-card h3 de arriba — usado por
+   src/app/herramientas/page.tsx (public), la única página donde esta
+   tarjeta lleva un h2 en vez de un h3 (ver comentario en ese archivo).
+   Sin esto heredaría el h2 general (36px), más grande de lo que esta
+   tarjeta mostró siempre. */
+.tool-card h2 {
+  font-size: 28px;
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .tool-card h2 {
+    font-size: 22px;
+  }
 }
 
 .tool-card p {
