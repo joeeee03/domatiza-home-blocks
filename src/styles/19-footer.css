@@ -232,17 +232,6 @@
   line-height: 1.4;
 }
 
-.footer-contact-icon {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  padding: 7px;
-  box-sizing: border-box;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-accent-600);
-}
-
 /* Base de .social-link — antes vivía sólo en
    public/src/styles/css/18-contact.css (específico de la página de
    Contacto), por eso nunca llegaba al canvas del Editor de página del

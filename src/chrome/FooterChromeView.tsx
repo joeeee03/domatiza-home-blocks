@@ -2,7 +2,7 @@ import { Phone, MessageCircle, Mail, Clock } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 import { whatsappLink } from '../lib/whatsappLink';
 import { useHomeBlocksEditor } from '../editor/EditorContext';
-import type { ChromeCompanyInfo } from './chromeTypes';
+import type { ChromeCompanyInfo, HorarioRango } from './chromeTypes';
 
 /**
  * "Chrome" no editable del Footer — puerto visual de
@@ -20,6 +20,58 @@ export interface FooterChromeViewProps {
   Image: HostImageComponent;
 }
 
+/**
+ * Agrupa los horarios de atención antes de renderizarlos: si varios
+ * días seguidos comparten el mismo horario (ej. "Martes", "Miércoles",
+ * "Jueves" con "9:00 - 18:00") los junta en un solo renglón ("Martes a
+ * Jueves"), y si el mismo horario se repite en días NO consecutivos
+ * (ej. "Viernes" y "Domingo" ambos "Cerrado") también los junta en un
+ * solo renglón ("Viernes y Domingo"). Sin esto la columna "Contacto"
+ * suma un renglón por cada día cargado en Configuración → Empresa y el
+ * footer queda desproporcionadamente largo. Funciona para cualquier
+ * combinación de datos porque `horariosAFormatoDB` (admin) siempre
+ * arma el array recorriendo los 7 días en el mismo orden fijo
+ * (Lunes → Domingo), así que agrupar por posiciones consecutivas es
+ * seguro.
+ *
+ * Duplicado a propósito en `public/src/components/layout/Footer.tsx`
+ * — mismo criterio que el resto de este paquete (ver comentario de
+ * `chromeTypes.ts`): los dos repos no comparten código de aplicación,
+ * así que cualquier cambio acá hay que replicarlo también ahí.
+ */
+function agruparHorarios(horarios: HorarioRango[]) {
+  const corridas: { dias: string[]; horario: string }[] = [];
+  for (const h of horarios) {
+    const ultima = corridas[corridas.length - 1];
+    if (ultima && ultima.horario === h.horario) {
+      ultima.dias.push(h.dia);
+    } else {
+      corridas.push({ dias: [h.dia], horario: h.horario });
+    }
+  }
+
+  const grupos: { rangos: string[][]; horario: string }[] = [];
+  for (const corrida of corridas) {
+    const existente = grupos.find((g) => g.horario === corrida.horario);
+    if (existente) {
+      existente.rangos.push(corrida.dias);
+    } else {
+      grupos.push({ rangos: [corrida.dias], horario: corrida.horario });
+    }
+  }
+
+  return grupos.map((grupo) => {
+    const etiquetas = grupo.rangos.map((dias) =>
+      dias.length > 1 ? `${dias[0]} a ${dias[dias.length - 1]}` : dias[0]
+    );
+    const label =
+      etiquetas.length > 1
+        ? `${etiquetas.slice(0, -1).join(', ')} y ${etiquetas[etiquetas.length - 1]}`
+        : etiquetas[0];
+    return { label, horario: grupo.horario };
+  });
+}
+
 export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewProps) {
   const isCanvas = useHomeBlocksEditor() !== null;
   const phone = companyInfo.phone;
@@ -27,6 +79,7 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
   const email = companyInfo.email;
   const address = [companyInfo.address, companyInfo.city].filter(Boolean).join(', ');
   const horarios = companyInfo.horarios.filter((h) => Boolean(h?.dia && h?.horario));
+  const horariosAgrupados = agruparHorarios(horarios);
 
   return (
     <footer className="footer">
@@ -91,12 +144,12 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
             <ul className="footer-contact">
               {phone && (
                 <li>
-                  <Phone aria-hidden="true" size={18} className="footer-contact-icon" /> <a href={`tel:${phone}`}>{phone}</a>
+                  <Phone aria-hidden="true" size={18} /> <a href={`tel:${phone}`}>{phone}</a>
                 </li>
               )}
               {whatsapp && (
                 <li>
-                  <MessageCircle aria-hidden="true" size={18} className="footer-contact-icon" />{' '}
+                  <MessageCircle aria-hidden="true" size={18} />{' '}
                   <a href={whatsappLink('Hola, quiero más información', whatsapp)} target="_blank" rel="noopener">
                     WhatsApp
                   </a>
@@ -104,12 +157,12 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
               )}
               {email && (
                 <li>
-                  <Mail aria-hidden="true" size={18} className="footer-contact-icon" /> <a href={`mailto:${email}`}>{email}</a>
+                  <Mail aria-hidden="true" size={18} /> <a href={`mailto:${email}`}>{email}</a>
                 </li>
               )}
-              {horarios.map((h) => (
-                <li key={`${h.dia}-${h.horario}`}>
-                  <Clock aria-hidden="true" size={18} className="footer-contact-icon" /> {h.dia}: {h.horario}
+              {horariosAgrupados.map((h) => (
+                <li key={`${h.label}-${h.horario}`}>
+                  <Clock aria-hidden="true" size={18} /> {h.label}: {h.horario}
                 </li>
               ))}
             </ul>
