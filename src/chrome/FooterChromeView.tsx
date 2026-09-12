@@ -20,6 +20,10 @@ export interface FooterChromeViewProps {
   Image: HostImageComponent;
 }
 
+function esHorarioCerrado(horario: string): boolean {
+  return horario.trim().toLowerCase() === 'cerrado';
+}
+
 /**
  * Agrupa los horarios de atención antes de renderizarlos: si varios
  * días seguidos comparten el mismo horario (ej. "Martes", "Miércoles",
@@ -33,6 +37,11 @@ export interface FooterChromeViewProps {
  * arma el array recorriendo los 7 días en el mismo orden fijo
  * (Lunes → Domingo), así que agrupar por posiciones consecutivas es
  * seguro.
+ *
+ * Los grupos cuyo horario es "Cerrado" se reordenan siempre al final
+ * (sin importar qué día les toque), así los horarios reales de
+ * atención quedan juntos arriba y no se ven interrumpidos por un día
+ * cerrado en el medio de la lista.
  *
  * Duplicado a propósito en `public/src/components/layout/Footer.tsx`
  * — mismo criterio que el resto de este paquete (ver comentario de
@@ -60,7 +69,12 @@ function agruparHorarios(horarios: HorarioRango[]) {
     }
   }
 
-  return grupos.map((grupo) => {
+  const ordenados = [
+    ...grupos.filter((g) => !esHorarioCerrado(g.horario)),
+    ...grupos.filter((g) => esHorarioCerrado(g.horario)),
+  ];
+
+  return ordenados.map((grupo) => {
     const etiquetas = grupo.rangos.map((dias) =>
       dias.length > 1 ? `${dias[0]} a ${dias[dias.length - 1]}` : dias[0]
     );
