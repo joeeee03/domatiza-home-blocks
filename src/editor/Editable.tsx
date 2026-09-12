@@ -175,6 +175,11 @@ export function EditableText({
   const Tag = (as ?? 'div') as any; // eslint-disable-line @typescript-eslint/no-explicit-any -- componente polimorfico: Tag recibe cualquier tipo de elemento pasado por quien llama
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
+  // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio que el
+  // resto de los primitivos de este archivo (ver comentario grande en
+  // `EditableRow` más abajo para el porqué de tocar sólo esto y no
+  // `EditorContext.tsx`).
+  const [focused, setFocused] = useState(false);
   const [editing, setEditing] = useState(false);
   const ref = useRef<HTMLElement | null>(null);
   const initialValueRef = useRef(value);
@@ -203,7 +208,34 @@ export function EditableText({
     setEditing(false);
   }
 
+  /**
+   * `onBlur` ya disparaba `commit()` (confirma el valor tipeado al salir
+   * del campo). Acá nada más se le suma apagar `focused` en el mismo
+   * handler — un único punto en vez de dos handlers separados en el
+   * mismo evento, para no depender de en qué orden los llame React.
+   */
+  function handleBlur() {
+    setFocused(false);
+    commit();
+  }
+
   function handleKeyDown(event: ReactKeyboardEvent<HTMLElement>) {
+    if (!editing) {
+      // NUEVO: antes de agregar `tabIndex` (ver el JSX de abajo) este
+      // campo no era alcanzable por Tab, así que esta rama nunca
+      // corría. Ahora que sí lo es, llegar acá por teclado y presionar
+      // Enter tiene que abrir edición — igual que ya hace el click —
+      // porque si no Enter caía en la rama de abajo (pensada para
+      // cuando YA se está editando) y sacaba el foco sin haber llegado
+      // a escribir nada. Sólo Enter, no Espacio: este campo se lee como
+      // texto, no como un botón, y tipear un espacio por error antes de
+      // haber entrado en modo edición no debería activar nada.
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        startEditing();
+      }
+      return;
+    }
     if (event.key === 'Escape') {
       event.preventDefault();
       cancel();
@@ -253,7 +285,7 @@ export function EditableText({
   // sigue siendo un paso aparte (botón "Guardar" del Editor de
   // página): esto sólo saca la fricción visual de tener que confirmar
   // cada campo uno por uno mientras se escribe.
-  const showOverlay = canEdit && hovered && !editing;
+  const showOverlay = canEdit && (hovered || focused) && !editing;
   const isEmpty = !editing && !value;
 
   // Fix del contorno mal marcado en campos de varias líneas (auditoría
@@ -289,12 +321,23 @@ export function EditableText({
     <Tag
       ref={ref}
       data-hb-editable={canEdit ? 'true' : undefined}
+      // NUEVO: sin esto el campo no entraba nunca en el orden de Tab
+      // (un `div`/`h1`/`p`/`span` sin `tabIndex` no es foco-alcanzable
+      // por más que después, ya en edición, `contentEditable` lo vuelva
+      // editable). `.hb-editable-target { outline: none }`
+      // (`24-editable-overlay.css`, sin tocar) ya suprime el anillo
+      // azul nativo del navegador en todos los estados de este tag —
+      // el propio `EditableOverlay` de abajo es el único indicador
+      // visual también para foco de teclado, así que no hace falta
+      // ningún ajuste de estilo adicional acá.
+      tabIndex={canEdit ? 0 : undefined}
       className={`${className ?? ''} hb-editable-target${editing ? ' hb-editing' : ''}${isEmpty ? ' hb-empty' : ''}`.trim()}
       style={{ ...style, position: 'relative', ...inlineTagFix }}
       contentEditable={canEdit && editing}
       suppressContentEditableWarning
       onMouseEnter={() => canEdit && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={canEdit ? () => setFocused(true) : undefined}
       onClick={
         canEdit
           ? (e: ReactMouseEvent) => {
@@ -303,7 +346,7 @@ export function EditableText({
             }
           : undefined
       }
-      onBlur={canEdit ? commit : undefined}
+      onBlur={canEdit ? handleBlur : undefined}
       onKeyDown={canEdit ? handleKeyDown : undefined}
     >
       {editing ? value : value || (canEdit ? placeholder : '')}
@@ -448,6 +491,9 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
   const Tag = (as ?? 'div') as any; // eslint-disable-line @typescript-eslint/no-explicit-any -- componente polimorfico: Tag recibe cualquier tipo de elemento pasado por quien llama
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
+  // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio en
+  // todo el archivo.
+  const [focused, setFocused] = useState(false);
 
   if (!editor) {
     return <Tag className={className} style={style} />;
@@ -458,10 +504,17 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
   return (
     <Tag
       data-hb-editable={canEdit ? 'true' : undefined}
+      // Ver el comentario del mismo cambio en `EditableIcon`: sin
+      // `outline: 'none'` acá, foco de teclado agregaría el anillo
+      // nativo del navegador encima del contorno propio de
+      // `EditableImageAreaOverlay`.
+      tabIndex={canEdit ? 0 : undefined}
       className={className}
-      style={{ ...style, cursor: canEdit ? 'pointer' : undefined }}
+      style={{ ...style, cursor: canEdit ? 'pointer' : undefined, outline: focused ? 'none' : undefined }}
       onMouseEnter={() => canEdit && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => canEdit && setFocused(true)}
+      onBlur={() => setFocused(false)}
       onClick={
         canEdit
           ? (e: ReactMouseEvent) => {
@@ -471,7 +524,11 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
           : undefined
       }
     >
-      {canEdit && hovered && (
+      {/* NO VERIFICADO EN DISPOSITIVO REAL — mismo comentario que en
+          `EditableIcon`: el picker de imagen se sigue abriendo sólo con
+          click/tap, no agregué activación por teclado (Enter/Espacio)
+          para no decidir unilateralmente ese alcance. */}
+      {canEdit && (hovered || focused) && (
         <EditableImageAreaOverlay
           label={label}
           onDelete={hasImage && editor.onImageRemove ? () => editor.onImageRemove!(fieldPath) : undefined}
@@ -513,6 +570,9 @@ export function EditableImageSlot({
 }: EditableImageSlotProps) {
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
+  // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio en
+  // todo el archivo.
+  const [focused, setFocused] = useState(false);
 
   if (!editor) return <>{children}</>;
 
@@ -521,10 +581,17 @@ export function EditableImageSlot({
   return (
     <span
       data-hb-editable={canEdit ? 'true' : undefined}
+      // Ver el comentario del mismo cambio en `EditableIcon`: sin
+      // `outline: 'none'` acá, foco de teclado agregaría el anillo
+      // nativo del navegador encima del velo/píldora de
+      // `EditableImageOverlay`.
+      tabIndex={canEdit ? 0 : undefined}
       className={wrapperClassName}
-      style={{ ...wrapperStyle, position: 'relative', cursor: canEdit ? 'pointer' : undefined }}
+      style={{ ...wrapperStyle, position: 'relative', cursor: canEdit ? 'pointer' : undefined, outline: focused ? 'none' : undefined }}
       onMouseEnter={() => canEdit && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => canEdit && setFocused(true)}
+      onBlur={() => setFocused(false)}
       onClick={
         canEdit
           ? (e: ReactMouseEvent) => {
@@ -535,7 +602,11 @@ export function EditableImageSlot({
       }
     >
       {children}
-      {canEdit && hovered && (
+      {/* NO VERIFICADO EN DISPOSITIVO REAL — mismo comentario que en
+          `EditableIcon`: el picker de imagen se sigue abriendo sólo con
+          click/tap, no agregué activación por teclado (Enter/Espacio)
+          para no decidir unilateralmente ese alcance. */}
+      {canEdit && (hovered || focused) && (
         <EditableImageOverlay
           label={label}
           hasImage={hasImage}
@@ -563,6 +634,9 @@ export interface EditableRatingProps {
 export function EditableRating({ fieldPath, value, label }: EditableRatingProps) {
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
+  // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio en
+  // todo el archivo.
+  const [focused, setFocused] = useState(false);
 
   if (!editor) {
     if (value === null) return null;
@@ -583,11 +657,17 @@ export function EditableRating({ fieldPath, value, label }: EditableRatingProps)
     <div
       className="testimonial-rating"
       data-hb-editable={canEdit ? 'true' : undefined}
-      style={{ position: 'relative' }}
+      // Ver el comentario del mismo cambio en `EditableIcon`: sin
+      // `outline: 'none'` acá, foco de teclado agregaría el anillo
+      // nativo del navegador encima del contorno de `EditableOverlay`.
+      tabIndex={canEdit ? 0 : undefined}
+      style={{ position: 'relative', outline: focused ? 'none' : undefined }}
       role={canEdit ? undefined : 'img'}
       aria-label={canEdit ? undefined : `Calificación: ${value} de 5 estrellas`}
       onMouseEnter={() => canEdit && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => canEdit && setFocused(true)}
+      onBlur={() => setFocused(false)}
     >
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
@@ -605,7 +685,13 @@ export function EditableRating({ fieldPath, value, label }: EditableRatingProps)
           }
         />
       ))}
-      {canEdit && hovered && <EditableOverlay label={label} color="orange" />}
+      {/* NO VERIFICADO EN DISPOSITIVO REAL — mismo comentario que en
+          `EditableIcon`: cambiar la calificación se sigue haciendo sólo
+          con click/tap sobre una estrella puntual; no agregué manejo de
+          teclado (ej. flechas para mover entre estrellas + Enter para
+          elegir, patrón ARIA "radiogroup") para no decidir
+          unilateralmente ese diseño de interacción. */}
+      {canEdit && (hovered || focused) && <EditableOverlay label={label} color="orange" />}
     </div>
   );
 }
@@ -626,6 +712,9 @@ export interface EditableIconProps {
 export function EditableIcon({ fieldPath, iconName, label, className }: EditableIconProps) {
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
+  // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio en
+  // todo el archivo.
+  const [focused, setFocused] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const Icon = resolveIcon(iconName);
 
@@ -638,9 +727,20 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
   return (
     <span
       data-hb-editable={canEdit ? 'true' : undefined}
-      style={{ position: 'relative', display: 'inline-flex' }}
+      // NUEVO: a diferencia de `EditableText`, este `<span>` no tiene
+      // ninguna clase con `outline: none` ya declarada en
+      // `24-editable-overlay.css` — sin `outline: 'none'` acá, foco de
+      // teclado dibujaría el anillo azul nativo del navegador AL MISMO
+      // TIEMPO que el contorno naranja de `EditableOverlay`, un doble
+      // indicador redundante. Se aplica sólo cuando `focused` es
+      // `true` (nunca a la fuerza), así que con mouse (sólo `hovered`)
+      // no cambia nada.
+      tabIndex={canEdit ? 0 : undefined}
+      style={{ position: 'relative', display: 'inline-flex', outline: focused ? 'none' : undefined }}
       onMouseEnter={() => canEdit && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => canEdit && setFocused(true)}
+      onBlur={() => setFocused(false)}
     >
       <Icon
         aria-hidden="true"
@@ -655,7 +755,18 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
             : undefined
         }
       />
-      {canEdit && hovered && !pickerOpen && <EditableOverlay label={label} color="orange" />}
+      {/*
+        NO VERIFICADO EN DISPOSITIVO REAL: este `<span>` queda foco-
+        alcanzable y el overlay ahora se ve al llegar por Tab (pedido
+        del ticket), pero el picker de íconos se sigue abriendo sólo
+        con click/tap sobre el `<Icon>` — no agregué un `onKeyDown`
+        (Enter/Espacio) que dispare `setPickerOpen`, porque eso ya no es
+        "mostrar el affordance" (lo pedido acá) sino "operarlo por
+        teclado", un cambio de comportamiento que el ticket no pide
+        explícitamente y que preferí no decidir unilateralmente (ver
+        RESUMEN MÍNIMO de la respuesta).
+      */}
+      {canEdit && (hovered || focused) && !pickerOpen && <EditableOverlay label={label} color="orange" />}
       {canEdit && pickerOpen && (
         <IconPickerPopover
           value={iconName}
@@ -757,23 +868,91 @@ export function EditableRow({ as, fieldPath, label, className, children, onDupli
   const Tag = (as ?? 'div') as any; // eslint-disable-line @typescript-eslint/no-explicit-any -- componente polimorfico: Tag recibe cualquier tipo de elemento pasado por quien llama
   const editor = useHomeBlocksEditor();
   const [hovered, setHovered] = useState(false);
+  /**
+   * Foco por teclado — a diferencia de los demás primitivos de este
+   * archivo, esta fila NO recibe `tabIndex` propio (ver el JSX de
+   * abajo): hoy sus únicos dos consumidores (`TrustBarView`,
+   * `WhyUsView`) siempre envuelven al menos un `EditableIcon`/
+   * `EditableText` como hijo, y esos primitivos SÍ son foco-alcanzables
+   * ahora (mismo cambio en este archivo). React 17+ implementa
+   * `onFocus`/`onBlur` sobre los eventos nativos `focusin`/`focusout`,
+   * que SÍ burbujean — así que tabular hasta el ícono o el texto de
+   * adentro dispara este `onFocus` de la fila igual, sin necesitar que
+   * la fila en sí sea un target de Tab aparte. Efecto práctico (y
+   * buscado): al llegar por teclado a cualquier campo de la fila,
+   * también aparecen acá los botones de Duplicar/Eliminar, no sólo el
+   * contorno del campo puntual. Si en el futuro existiera un tipo de
+   * fila sin NINGÚN hijo foco-alcanzable, este mecanismo no alcanzaría
+   * por sí solo — no es el caso hoy en ninguna vista.
+   */
+  const [focused, setFocused] = useState(false);
+  /**
+   * "Fila activa por tacto" (punto 2 del pedido): un tap sólo deja el
+   * elemento en estado `:focus`/`focused` de forma persistente cuando
+   * cae sobre un elemento REALMENTE foco-alcanzable — acá eso son el
+   * ícono/texto de adentro, nunca el espacio vacío de la propia
+   * tarjeta. Y no hay ningún equivalente táctil de `:hover`. Por eso
+   * hace falta un estado propio: `touchActive` se prende/apaga con un
+   * tap sobre el espacio de la fila (no sobre un campo) y se apaga solo
+   * al tocar afuera — mismo patrón de "click afuera cierra" que ya usa
+   * `IconPickerPopover` más arriba en este archivo (reutilizado tal
+   * cual, no es un mecanismo nuevo).
+   */
+  const [touchActive, setTouchActive] = useState(false);
+  const rowRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!touchActive) return;
+    function onPointerDown(event: PointerEvent) {
+      if (rowRef.current && !rowRef.current.contains(event.target as Node)) setTouchActive(false);
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [touchActive]);
 
   if (!editor) {
     return <Tag className={className}>{children}</Tag>;
   }
 
   const canEdit = editor.canEditField(fieldPath);
+  const showOverlay = canEdit && (hovered || focused || touchActive);
 
   return (
     <Tag
+      ref={rowRef}
       data-hb-editable={canEdit ? 'true' : undefined}
       className={className}
       style={{ position: 'relative' }}
       onMouseEnter={() => canEdit && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => canEdit && setFocused(true)}
+      onBlur={() => setFocused(false)}
+      // Alterna `touchActive`. Deliberadamente NO llama a
+      // `event.stopPropagation()` ni chequea a mano en qué elemento
+      // cayó el click: cada campo editable de adentro (`EditableText`/
+      // `EditableIcon`/`EditableImageArea`/`EditableImageSlot`/
+      // `EditableRating`, todos en este mismo archivo) YA frena la
+      // propagación en su propio `onClick` antes de hacer lo suyo — así
+      // que este handler de la fila sólo llega a ejecutarse cuando el
+      // tap cayó de verdad en el espacio propio de la tarjeta (padding,
+      // fondo), nunca sobre un campo real. Confirmado por revisión de
+      // código en los cinco primitivos de arriba (VERIFICADO); no
+      // probado con un tap real en dispositivo (NO VERIFICADO, ver
+      // sección final de la respuesta).
+      //
+      // Restricción #4 del pedido (nada de detectar "es touch" a nivel
+      // de dispositivo): este mismo `onClick` también corre con mouse.
+      // Un click de mouse sobre el espacio vacío de la fila (no sobre
+      // ningún campo) va a prender `touchActive` igual que un tap —
+      // hoy ese click no hacía nada, así que es un comportamiento
+      // nuevo, pero acotado: las dos filas que existen hoy
+      // (`TrustBarView`/`WhyUsView`) están casi completamente ocupadas
+      // por el ícono + texto(s), así que en la práctica queda muy poco
+      // "espacio vacío" para que un mouse lo toque sin querer.
+      onClick={canEdit ? () => setTouchActive((active) => !active) : undefined}
     >
       {children}
-      {canEdit && hovered && (
+      {showOverlay && (
         <EditableOverlay
           label={label}
           color="blue"
