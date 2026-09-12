@@ -183,7 +183,14 @@
 
 .hb-icon-popover-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  /* Hit target (auditoría del Editor de página, punto de menor
+     prioridad): con ancho 280px, padding de 8px a cada lado y gap de
+     3px, 6 columnas dejaban cada botón en ~41.5px de lado; 5 columnas
+     lo acercan a ~50px, por encima del objetivo de 44px sin tocar el
+     ancho/alto general del popover. NO VERIFICADO visualmente (sin
+     navegador real): si en la práctica se ve desproporcionado, es
+     reversible a `repeat(6, 1fr)` sin tocar nada más de este archivo. */
+  grid-template-columns: repeat(5, 1fr);
   gap: 3px;
   padding: 0 8px 8px;
   overflow-y: auto;

@@ -2,6 +2,8 @@
 
 import {
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -697,9 +699,188 @@ export function EditableRating({ fieldPath, value, label }: EditableRatingProps)
 }
 
 /* =========================================================================
+ * IconPickerPopover — posicionamiento con detección de colisión.
+ *
+ * `.hb-icon-popover` (24-editable-overlay.css) se abre por defecto
+ * `top: calc(100% + 8px); left: 0`, ancho fijo, sin ningún cálculo de
+ * colisión: si el ícono que lo dispara está cerca del borde del
+ * contenedor, el popover queda cortado. El contenedor a evitar NO es
+ * la ventana real del navegador — el canvas del Editor de página
+ * (`PageEditorPage.tsx`, otro repo) simula un ancho de dispositivo
+ * (1440/768/390px) puertas adentro de un `<div>` con overflow propio,
+ * independiente del viewport real — así que la colisión tiene que
+ * calcularse contra ESE contenedor, no contra `window.innerWidth`.
+ *
+ * `findClippingBoundary` sube por el árbol real desde el ícono
+ * (`anchorEl`) buscando el ancestro más cercano cuyo overflow recorta
+ * contenido (auto/scroll/hidden). Cruza el borde del Shadow DOM (vía
+ * `ShadowRoot.host`) porque en el admin este árbol vive adentro de un
+ * shadow root (`IsolatedCanvas.tsx`): sin ese salto, la búsqueda nunca
+ * llegaría al `<div ref={hostRef}>` (overflow-auto) que de verdad
+ * acota el ancho simulado — se cortaría antes, en la raíz del shadow
+ * tree. En el sitio público (sin Shadow DOM, sin ancho simulado) el
+ * mismo recorrido termina en `document.documentElement`, que es
+ * exactamente el viewport real: ningún comportamiento nuevo ahí.
+ *
+ * No se agrega ninguna librería de posicionamiento (nada de
+ * `@floating-ui`): alcanza con `getBoundingClientRect()` del ícono, del
+ * propio popover (para medir su alto real ya renderizado) y de ese
+ * contenedor de referencia.
+ * =======================================================================*/
+
+/** Ancho "ideal" del popover en Desktop/Tablet — se mantiene igual que
+ *  hoy salvo que el contenedor de referencia sea más angosto que esto
+ *  (ver `computeIconPopoverPlacement`). */
+const ICON_POPOVER_WIDTH = 280;
+/** Margen mínimo contra los bordes del contenedor de referencia. */
+const ICON_POPOVER_MARGIN = 8;
+/** Separación entre el ícono y el popover — mismo valor que el
+ *  `calc(100% + 8px)` que ya trae `.hb-icon-popover` en el CSS. */
+const ICON_POPOVER_GAP = 8;
+
+interface IconPopoverPlacement {
+  top: string;
+  bottom: string;
+  left: string;
+  right: string;
+  width: number;
+}
+
+function elementClips(el: Element): boolean {
+  const style = window.getComputedStyle(el);
+  return /(auto|scroll|hidden|clip)/.test(`${style.overflowX}${style.overflowY}`);
+}
+
+function findClippingBoundary(anchorEl: Element): Element {
+  let node: Node | null = anchorEl.parentNode;
+  while (node) {
+    if (typeof ShadowRoot !== 'undefined' && node instanceof ShadowRoot) {
+      // Cruce del borde del Shadow DOM — ver el comentario grande de
+      // arriba sobre por qué hace falta esto en el canvas del admin.
+      node = node.host;
+      continue;
+    }
+    if (node instanceof Element) {
+      if (elementClips(node)) return node;
+      node = node.parentNode;
+      continue;
+    }
+    node = node.parentNode;
+  }
+  return document.documentElement;
+}
+
+/**
+ * Decide top/bottom/left/right/width para que el popover quede
+ * completo dentro de `findClippingBoundary(anchorEl)`. Prioriza la
+ * posición actual (abajo-derecha, la que ya define el CSS por
+ * defecto) y sólo invierte el eje que de verdad no entra — nunca
+ * ambos a la vez salvo que ninguno de los dos lados de ese eje entre,
+ * en cuyo caso se deja lo más adentro posible (clamp), pero siempre
+ * completo.
+ *
+ * Devuelve valores SIEMPRE explícitos para las cuatro propiedades
+ * (usando `'auto'` para el lado no usado en cada eje) a propósito: si
+ * se dejara, por ejemplo, `left` sin especificar al abrir "hacia la
+ * izquierda" (`right`), el `left: 0` que ya declara la clase CSS
+ * seguiría activo y, con las dos propiedades de un mismo eje
+ * especificadas a la vez más un ancho explícito, el resultado quedaría
+ * sobre-restringido (el navegador terminaría ignorando `right`, no
+ * `left`). Mismo motivo para `top`/`bottom`: como el popover no tiene
+ * una altura fija (`max-height`, no `height` — el alto real depende del
+ * contenido), dejar `top` Y `bottom` puestos a la vez estiraría la caja
+ * para llenar ese espacio en vez de dejarla con su alto de contenido.
+ */
+function computeIconPopoverPlacement(anchorEl: HTMLElement, popoverEl: HTMLElement): IconPopoverPlacement {
+  const boundaryEl = findClippingBoundary(anchorEl);
+  const anchorRect = anchorEl.getBoundingClientRect();
+  const boundaryRect = boundaryEl.getBoundingClientRect();
+  const popoverRect = popoverEl.getBoundingClientRect();
+
+  // Ancho: en Desktop/Tablet el contenedor de referencia siempre tiene
+  // de sobra, así que esto sigue dando 280px como hoy. En "Celular"
+  // (390px de canvas simulado) evita que un ancho fijo pueda exceder
+  // al propio canvas, sin importar en qué columna de la grilla esté el
+  // ícono.
+  const maxAvailableWidth = Math.max(160, boundaryRect.width - ICON_POPOVER_MARGIN * 2);
+  const width = Math.min(ICON_POPOVER_WIDTH, maxAvailableWidth);
+
+  let left = 'auto';
+  let right = 'auto';
+  const naturalRightEdge = anchorRect.left + width;
+  if (naturalRightEdge <= boundaryRect.right - ICON_POPOVER_MARGIN) {
+    // Entra hacia la derecha, alineado con el borde izquierdo del
+    // ícono — el comportamiento de hoy.
+    left = '0px';
+  } else {
+    const candidateLeftEdge = anchorRect.right - width;
+    if (candidateLeftEdge >= boundaryRect.left + ICON_POPOVER_MARGIN) {
+      // No entra hacia la derecha: se abre hacia la izquierda,
+      // alineado con el borde derecho del ícono.
+      right = '0px';
+    } else {
+      // Ninguno de los dos lados entra entero (contenedor angosto,
+      // ícono cerca de una esquina) — se deja lo más adentro posible,
+      // pero siempre completo dentro del contenedor.
+      const clampedLeftEdge = Math.min(
+        Math.max(anchorRect.left, boundaryRect.left + ICON_POPOVER_MARGIN),
+        boundaryRect.right - ICON_POPOVER_MARGIN - width
+      );
+      left = `${clampedLeftEdge - anchorRect.left}px`;
+    }
+  }
+
+  let top = 'auto';
+  let bottom = 'auto';
+  const popoverHeight = popoverRect.height;
+  const naturalBottomEdge = anchorRect.bottom + ICON_POPOVER_GAP + popoverHeight;
+  if (naturalBottomEdge <= boundaryRect.bottom - ICON_POPOVER_MARGIN) {
+    // Entra hacia abajo — el comportamiento de hoy.
+    top = `calc(100% + ${ICON_POPOVER_GAP}px)`;
+  } else {
+    const candidateTopEdge = anchorRect.top - ICON_POPOVER_GAP - popoverHeight;
+    if (candidateTopEdge >= boundaryRect.top + ICON_POPOVER_MARGIN) {
+      // No entra hacia abajo: se abre hacia arriba.
+      bottom = `calc(100% + ${ICON_POPOVER_GAP}px)`;
+    } else {
+      // Ninguno de los dos entra entero (ícono cerca del borde
+      // inferior de un canvas ya scrolleado, por ejemplo) — clamp.
+      const clampedTopEdge = Math.min(
+        Math.max(anchorRect.bottom + ICON_POPOVER_GAP, boundaryRect.top + ICON_POPOVER_MARGIN),
+        boundaryRect.bottom - ICON_POPOVER_MARGIN - popoverHeight
+      );
+      top = `${clampedTopEdge - anchorRect.top}px`;
+    }
+  }
+
+  return { top, bottom, left, right, width };
+}
+
+/**
+ * Debounce genérico — copia intencional, línea por línea, de
+ * `admin/src/hooks/useDebounce.ts` (mismo delay de 150ms que ya usa
+ * `IconPicker.tsx` para su propio buscador). NO se importa ESE archivo
+ * porque `@domatiza/home-blocks` es un paquete propio (ver su
+ * `package.json`: sólo `react`/`lucide-react` como peer deps, ninguna
+ * dependencia hacia el código interno del admin) — así que "alinear
+ * con el patrón que ya usa `IconPicker.tsx`" significa acá duplicar
+ * esta implementación de 8 líneas sin dependencias propias, no
+ * importarla desde el otro repo.
+ */
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+/* =========================================================================
  * EditableIcon — ícono de un ítem de Barra de confianza/¿Por qué
- * elegirnos?. Tocarlo abre un selector chico con búsqueda (ver
- * `IconPickerPopover` más abajo).
+ * elegirnos?. Tocarlo (o, ahora, Enter/Espacio con foco de teclado)
+ * abre un selector chico con búsqueda (ver `IconPickerPopover` más
+ * arriba).
  * =======================================================================*/
 
 export interface EditableIconProps {
@@ -741,6 +922,22 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
       onMouseLeave={() => setHovered(false)}
       onFocus={() => canEdit && setFocused(true)}
       onBlur={() => setFocused(false)}
+      // Navegación por teclado (auditoría del Editor de página): este
+      // `<span>` ya era foco-alcanzable (Tab) y mostraba el affordance
+      // de edición; ahora Enter/Espacio también ABRE el selector, igual
+      // que el click que ya existía sobre el `<Icon>` (sin tocar ese
+      // click). Mismo criterio que `onKeyDown` de `AddRowTile` más
+      // abajo en este archivo.
+      onKeyDown={
+        canEdit
+          ? (e: ReactKeyboardEvent<HTMLSpanElement>) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setPickerOpen((open) => !open);
+              }
+            }
+          : undefined
+      }
     >
       <Icon
         aria-hidden="true"
@@ -755,17 +952,6 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
             : undefined
         }
       />
-      {/*
-        NO VERIFICADO EN DISPOSITIVO REAL: este `<span>` queda foco-
-        alcanzable y el overlay ahora se ve al llegar por Tab (pedido
-        del ticket), pero el picker de íconos se sigue abriendo sólo
-        con click/tap sobre el `<Icon>` — no agregué un `onKeyDown`
-        (Enter/Espacio) que dispare `setPickerOpen`, porque eso ya no es
-        "mostrar el affordance" (lo pedido acá) sino "operarlo por
-        teclado", un cambio de comportamiento que el ticket no pide
-        explícitamente y que preferí no decidir unilateralmente (ver
-        RESUMEN MÍNIMO de la respuesta).
-      */}
       {canEdit && (hovered || focused) && !pickerOpen && <EditableOverlay label={label} color="orange" />}
       {canEdit && pickerOpen && (
         <IconPickerPopover
@@ -791,7 +977,8 @@ function IconPickerPopover({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const [placement, setPlacement] = useState<IconPopoverPlacement | null>(null);
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -801,6 +988,35 @@ function IconPickerPopover({
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [onClose]);
 
+  // Cierre con Escape (aditivo al cierre por click afuera de arriba,
+  // que no se toca) — no selecciona ningún ícono, sólo cierra.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  // Posicionamiento con detección de colisión (ver el comentario
+  // grande de `computeIconPopoverPlacement` más arriba). Se mide UNA
+  // vez, al abrir: el ícono que dispara el popover y su contenedor de
+  // referencia no se mueven mientras está abierto en este flujo (no
+  // hay drag ni scroll propio del ítem), así que alcanza para los
+  // casos de la auditoría (ícono en el borde de la grilla en
+  // "Celular", canvas ya scrolleado). `useLayoutEffect` (no
+  // `useEffect`) para medir y corregir ANTES del primer paint, sin
+  // parpadeo. El `<span ref={containerRef}>` de más abajo es hijo
+  // DIRECTO del `<span style={{ position: 'relative' }}>` de
+  // `EditableIcon` — por eso `parentElement` alcanza como ancla, sin
+  // necesidad de pasar una ref aparte.
+  useLayoutEffect(() => {
+    const popoverEl = containerRef.current;
+    const anchorEl = popoverEl?.parentElement ?? null;
+    if (!popoverEl || !anchorEl) return;
+    setPlacement(computeIconPopoverPlacement(anchorEl, popoverEl));
+  }, []);
+
   // Búsqueda multi-idioma (auditoría del Editor de página): antes esto
   // filtraba `CURATED_ICON_NAMES` (~90 nombres, sólo en inglés) por
   // substring literal. `searchIcons()` (`curatedIconNames.ts`) busca
@@ -808,12 +1024,28 @@ function IconPickerPopover({
   // `iconSynonyms.ts` (español), sin texto escrito devuelve el mismo
   // set curado chico de antes — ver el comentario grande de ese
   // archivo para el porqué de cada parte.
-  const results = searchIcons(query);
+  //
+  // Performance (auditoría del Editor de página): antes esto llamaba
+  // `searchIcons(query)` directo en el cuerpo del componente, en CADA
+  // render, sin debounce ni memoización — tipear rápido disparaba una
+  // pasada completa de búsqueda por tecla, sin cancelar la anterior.
+  // Mismo patrón ya probado en `IconPicker.tsx` (admin): debounce de
+  // 150ms sobre el valor tipeado (`useDebouncedValue`, copia de
+  // `useDebounce.ts` — ver su comentario grande más arriba) +
+  // `useMemo` sobre el resultado, con el valor YA debounced como
+  // dependencia.
+  const debouncedQuery = useDebouncedValue(query, 150);
+  const results = useMemo(() => searchIcons(debouncedQuery), [debouncedQuery]);
 
   return (
     <span
       ref={containerRef}
       className="hb-icon-popover"
+      style={
+        placement
+          ? { top: placement.top, bottom: placement.bottom, left: placement.left, right: placement.right, width: placement.width }
+          : undefined
+      }
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
