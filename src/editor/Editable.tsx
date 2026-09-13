@@ -194,15 +194,47 @@ export function EditableText({
     setEditing(true);
   }
 
-  function commit() {
+  /**
+   * Lee el texto actual del nodo y, si cambió respecto al valor con el
+   * que arrancó esta sesión de edición (`initialValueRef`), lo envía
+   * (`onCommit`/`editor.onTextCommit`) — sin tocar `editing`. Es el
+   * corazón compartido de `commit()` (blur/Enter/Escape, además sale
+   * del modo edición) y de `handleInput()` (cada tecla, se queda
+   * editando) — antes esto sólo vivía adentro de `commit()`.
+   */
+  function stageCurrentText() {
     const node = ref.current;
-    setEditing(false);
     if (!node || !editor) return;
     const next = readEditedText(node);
     if (next !== initialValueRef.current) {
       if (onCommit) onCommit(next);
       else editor.onTextCommit(fieldPath, next);
     }
+  }
+
+  function commit() {
+    setEditing(false);
+    stageCurrentText();
+  }
+
+  /**
+   * NUEVO — antes el campo recién contaba como "editado" (chip de
+   * "cambios sin guardar" arriba, botón Guardar habilitado) al hacer
+   * `commit()` en el blur: escribir una letra y clickear "Guardar"
+   * sin pasar antes por otro campo/click afuera no hacía nada, porque
+   * ese botón vive deshabilitado mientras `isDirtyGlobal` sigue en
+   * `false` (`draftStore.tsx`, `dirtySections` sólo se llena cuando
+   * `onTextCommit` corrió al menos una vez) y un botón deshabilitado
+   * no dispara blur en el campo. Acá se llama la MISMA lógica de
+   * staging en cada tecla (`onInput`, más abajo en el JSX), así que
+   * "cambios sin guardar" aparece de inmediato y "Guardar" ya queda
+   * clickeable sin tener que abandonar el campo primero. `commit()`
+   * (blur/Enter/Escape) sigue existiendo igual que antes, por si el
+   * usuario sale del campo del modo de siempre.
+   */
+  function handleInput() {
+    if (!editor) return;
+    stageCurrentText();
   }
 
   function cancel() {
@@ -349,9 +381,27 @@ export function EditableText({
           : undefined
       }
       onBlur={canEdit ? handleBlur : undefined}
+      onInput={canEdit ? handleInput : undefined}
       onKeyDown={canEdit ? handleKeyDown : undefined}
     >
-      {editing ? value : value || (canEdit ? placeholder : '')}
+      {/*
+       * Mientras `editing` es `true` se muestra `initialValueRef.current`
+       * (el texto FIJO con el que arrancó esta sesión de edición) y NO
+       * el `value` en vivo del prop — a propósito. `handleInput` de
+       * arriba stagea en cada tecla, y ese staging sube por contexto
+       * hasta el borrador y VUELVE acá abajo como un `value` nuevo en
+       * el siguiente render. Si ese `value` en vivo se mostrara acá
+       * mientras el nodo sigue con foco y `contentEditable`, React
+       * reescribiría el texto real del DOM en cada tecla (ej. recorta
+       * un espacio al final que `readEditedText` ya hizo `.trim()`) y
+       * el cursor saltaría al final — el bug clásico de "contentEditable
+       * controlado". Al quedar fijo, React nunca vuelve a tocar este
+       * nodo mientras se edita: el DOM manda solo, tal como ya hacía
+       * antes de este cambio. Recién al salir de edición (`commit()`)
+       * se vuelve a leer el `value` real (ya actualizado) para el
+       * render de sólo lectura.
+       */}
+      {editing ? initialValueRef.current : value || (canEdit ? placeholder : '')}
       {showOverlay && <EditableOverlay label={label} color="orange" />}
     </Tag>
   );
