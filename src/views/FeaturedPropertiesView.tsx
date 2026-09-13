@@ -13,9 +13,6 @@ export function FeaturedPropertiesView({ properties, Link, Image }: FeaturedProp
       <div className="container">
         <div className="section-header">
           <h2>Propiedades destacadas</h2>
-          <p className="section-subtitle">
-            Una selección de lo último que sumamos al catálogo. Precios siempre en USD.
-          </p>
         </div>
 
         <div className="properties-grid properties-grid--featured" aria-live="polite">

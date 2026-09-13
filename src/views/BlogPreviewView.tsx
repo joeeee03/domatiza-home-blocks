@@ -13,10 +13,6 @@ export function BlogPreviewView({ posts, Link, Image }: BlogPreviewViewProps) {
       <div className="container">
         <div className="section-header">
           <h2>Novedades del mercado inmobiliario</h2>
-          <p className="section-subtitle">
-            Notas para entender mejor el mercado de San Nicolás y la zona, y tomar mejores decisiones
-            a la hora de comprar, vender o alquilar.
-          </p>
         </div>
 
         <div className="blog-grid blog-grid--preview" aria-live="polite">

@@ -57,9 +57,6 @@ export function ServicesView({ Link, Image }: ServicesViewProps) {
         <div className="section-header">
           <span className="section-eyebrow">Nuestros servicios</span>
           <h2>Todo lo que necesitás para tu próxima operación inmobiliaria</h2>
-          <p className="section-subtitle">
-            Seis formas de trabajar con nosotros — cada una con su propio equipo y proceso.
-          </p>
         </div>
 
         <div className="services-grid">
