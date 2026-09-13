@@ -185,18 +185,39 @@ export function EditableText({
   const [editing, setEditing] = useState(false);
   const ref = useRef<HTMLElement | null>(null);
   const initialValueRef = useRef(value);
+  /**
+   * NUEVO — último texto que de verdad llegó a mandarse a
+   * `onCommit`/`editor.onTextCommit` en esta sesión de edición (arranca
+   * igual a `initialValueRef` y se actualiza cada vez que `stageCurrentText`
+   * envía algo). Antes `stageCurrentText` comparaba `next` contra
+   * `initialValueRef` (el valor ORIGINAL, fijo toda la sesión) para
+   * decidir si mandar el cambio — bug: escribir algo y después borrarlo
+   * letra por letra hasta dejar el campo IDÉNTICO al original hacía que
+   * esa última tecla (next === initialValueRef.current) nunca se
+   * mandara, así que el borrador se quedaba con el texto intermedio de
+   * la ANTEPENÚLTIMA tecla (ej. quedaba guardado "Bienvenidos a la
+   * inmobiliaria X" aunque en pantalla ya decía "Bienvenidos a la
+   * inmobiliaria") — el reporte de "borro algo y queda lo viejo".
+   * Comparando contra `lastStagedRef` (el último valor que EFECTIVAMENTE
+   * mandamos, no el de arranque) cualquier cambio real — incluido volver
+   * a escribir el texto original — se manda siempre, así el borrador
+   * nunca queda desincronizado del campo.
+   */
+  const lastStagedRef = useRef(value);
 
   const canEdit = !!editor && editor.canEditField(fieldPath);
 
   function startEditing() {
     if (!canEdit || editing) return;
     initialValueRef.current = value;
+    lastStagedRef.current = value;
     setEditing(true);
   }
 
   /**
-   * Lee el texto actual del nodo y, si cambió respecto al valor con el
-   * que arrancó esta sesión de edición (`initialValueRef`), lo envía
+   * Lee el texto actual del nodo y, si cambió respecto al último valor
+   * que de verdad se mandó (`lastStagedRef` — ver el comentario grande
+   * de arriba, NO `initialValueRef`), lo envía
    * (`onCommit`/`editor.onTextCommit`) — sin tocar `editing`. Es el
    * corazón compartido de `commit()` (blur/Enter/Escape, además sale
    * del modo edición) y de `handleInput()` (cada tecla, se queda
@@ -206,7 +227,8 @@ export function EditableText({
     const node = ref.current;
     if (!node || !editor) return;
     const next = readEditedText(node);
-    if (next !== initialValueRef.current) {
+    if (next !== lastStagedRef.current) {
+      lastStagedRef.current = next;
       if (onCommit) onCommit(next);
       else editor.onTextCommit(fieldPath, next);
     }
@@ -218,12 +240,12 @@ export function EditableText({
   }
 
   /**
-   * NUEVO — antes el campo recién contaba como "editado" (chip de
-   * "cambios sin guardar" arriba, botón Guardar habilitado) al hacer
-   * `commit()` en el blur: escribir una letra y clickear "Guardar"
-   * sin pasar antes por otro campo/click afuera no hacía nada, porque
-   * ese botón vive deshabilitado mientras `isDirtyGlobal` sigue en
-   * `false` (`draftStore.tsx`, `dirtySections` sólo se llena cuando
+   * Antes el campo recién contaba como "editado" (chip de "cambios sin
+   * guardar" arriba, botón Guardar habilitado) al hacer `commit()` en
+   * el blur: escribir una letra y clickear "Guardar" sin pasar antes
+   * por otro campo/click afuera no hacía nada, porque ese botón vive
+   * deshabilitado mientras `isDirtyGlobal` sigue en `false`
+   * (`draftStore.tsx`, `dirtySections` sólo se llena cuando
    * `onTextCommit` corrió al menos una vez) y un botón deshabilitado
    * no dispara blur en el campo. Acá se llama la MISMA lógica de
    * staging en cada tecla (`onInput`, más abajo en el JSX), así que
