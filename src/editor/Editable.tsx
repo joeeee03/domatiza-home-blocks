@@ -568,6 +568,41 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
   // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio en
   // todo el archivo.
   const [focused, setFocused] = useState(false);
+  /**
+   * Alcance táctil del botón "Eliminar imagen" (auditoría de accesibilidad
+   * táctil del Editor de página): a diferencia de `EditableText`/
+   * `EditableIcon`, acá el tap sobre el elemento YA dispara una acción
+   * propia (`onImageRequest`, abre el modal de reemplazo) — no hay
+   * `:focus` persistente en touch que sirva de señal, así que sin este
+   * estado el overlay (y el botón de eliminar que vive adentro) nunca
+   * aparece en un dispositivo sin mouse. Mismo patrón "tap adentro
+   * prende, tap afuera apaga" que ya usa `EditableRow` más abajo en este
+   * archivo — reutilizado tal cual, no es un mecanismo nuevo.
+   *
+   * A diferencia de `EditableRow` (que sólo prende `touchActive` cuando
+   * el tap NO cae sobre ningún campo con acción propia), acá el propio
+   * `onClick` es esa acción — por eso se arma `touchActive` en el MISMO
+   * handler que ya llama a `onImageRequest`, sin reemplazarlo ni
+   * condicionar uno al otro (ver el `onClick` de abajo). Se evaluó la
+   * alternativa de que un primer tap sólo mostrara el overlay y un
+   * segundo abriera el modal, pero eso cambia CUÁNDO se dispara
+   * `onImageRequest` en touch (pasa de 1 a 2 taps) — más comportamiento
+   * nuevo sobre un flujo que ya funciona bien y que el pedido pide no
+   * tocar. Con este enfoque el flujo de reemplazo queda IDÉNTICO (mismo
+   * tap, mismo momento); lo único nuevo es que ese mismo tap también deja
+   * armado el overlay para cuando el modal se cierra.
+   */
+  const [touchActive, setTouchActive] = useState(false);
+  const areaRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!touchActive) return;
+    function onPointerDown(event: PointerEvent) {
+      if (areaRef.current && !areaRef.current.contains(event.target as Node)) setTouchActive(false);
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [touchActive]);
 
   if (!editor) {
     return <Tag className={className} style={style} />;
@@ -577,6 +612,7 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
 
   return (
     <Tag
+      ref={areaRef}
       data-hb-editable={canEdit ? 'true' : undefined}
       // Ver el comentario del mismo cambio en `EditableIcon`: sin
       // `outline: 'none'` acá, foco de teclado agregaría el anillo
@@ -593,16 +629,22 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
         canEdit
           ? (e: ReactMouseEvent) => {
               e.stopPropagation();
+              setTouchActive(true);
               editor.onImageRequest(fieldPath);
             }
           : undefined
       }
     >
-      {/* NO VERIFICADO EN DISPOSITIVO REAL — mismo comentario que en
-          `EditableIcon`: el picker de imagen se sigue abriendo sólo con
-          click/tap, no agregué activación por teclado (Enter/Espacio)
-          para no decidir unilateralmente ese alcance. */}
-      {canEdit && (hovered || focused) && (
+      {/* Alcance táctil CONFIRMADO por diseño (ver el comentario grande
+          de `touchActive` arriba): con mouse, `hovered` sigue mostrando
+          el overlay exactamente igual que antes; en touch, el mismo tap
+          que abre el modal de reemplazo arma `touchActive`, así que al
+          cerrar/cancelar ese modal el overlay (con el botón de eliminar)
+          queda visible sin necesitar foco. El picker de imagen se sigue
+          abriendo sólo con click/tap, no se agregó activación por
+          teclado (Enter/Espacio) para no decidir unilateralmente ese
+          alcance — eso sigue NO VERIFICADO, es un problema aparte. */}
+      {canEdit && (hovered || focused || touchActive) && (
         <EditableImageAreaOverlay
           label={label}
           onDelete={hasImage && editor.onImageRemove ? () => editor.onImageRemove!(fieldPath) : undefined}
@@ -647,6 +689,27 @@ export function EditableImageSlot({
   // Foco por teclado (Tab) — aditivo a `hovered`, mismo criterio en
   // todo el archivo.
   const [focused, setFocused] = useState(false);
+  /**
+   * Alcance táctil del botón "Eliminar imagen" — mismo problema y misma
+   * solución que en `EditableImageArea` justo arriba en este archivo
+   * (ver el comentario grande de `touchActive` ahí para el porqué
+   * completo): el tap sobre el slot ya dispara `onImageRequest` por sí
+   * solo, así que `touchActive` se arma en ese mismo `onClick`, sin
+   * reemplazarlo, para que el overlay (con el botón de eliminar) quede
+   * visible al cerrar/cancelar el modal de reemplazo. Mismo patrón
+   * "tap adentro prende, tap afuera apaga" de `EditableRow`.
+   */
+  const [touchActive, setTouchActive] = useState(false);
+  const slotRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!touchActive) return;
+    function onPointerDown(event: PointerEvent) {
+      if (slotRef.current && !slotRef.current.contains(event.target as Node)) setTouchActive(false);
+    }
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [touchActive]);
 
   if (!editor) return <>{children}</>;
 
@@ -654,6 +717,7 @@ export function EditableImageSlot({
 
   return (
     <span
+      ref={slotRef}
       data-hb-editable={canEdit ? 'true' : undefined}
       // Ver el comentario del mismo cambio en `EditableIcon`: sin
       // `outline: 'none'` acá, foco de teclado agregaría el anillo
@@ -670,17 +734,19 @@ export function EditableImageSlot({
         canEdit
           ? (e: ReactMouseEvent) => {
               e.stopPropagation();
+              setTouchActive(true);
               editor.onImageRequest(fieldPath);
             }
           : undefined
       }
     >
       {children}
-      {/* NO VERIFICADO EN DISPOSITIVO REAL — mismo comentario que en
-          `EditableIcon`: el picker de imagen se sigue abriendo sólo con
-          click/tap, no agregué activación por teclado (Enter/Espacio)
-          para no decidir unilateralmente ese alcance. */}
-      {canEdit && (hovered || focused) && (
+      {/* Alcance táctil CONFIRMADO por diseño — ver el comentario grande
+          de `touchActive` arriba. El picker de imagen se sigue abriendo
+          sólo con click/tap, no se agregó activación por teclado
+          (Enter/Espacio) para no decidir unilateralmente ese alcance —
+          eso sigue NO VERIFICADO, es un problema aparte. */}
+      {canEdit && (hovered || focused || touchActive) && (
         <EditableImageOverlay
           label={label}
           hasImage={hasImage}
