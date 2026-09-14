@@ -147,17 +147,13 @@
 }
 
 .mobile-nav-link.active {
-  color: var(--color-secondary-500);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-accent-600);
 }
 
-.mobile-nav-link.active::after {
-  content: '';
-  display: block;
-  width: 32px;
-  height: 2px;
-  margin: var(--space-1) auto 0;
-  background-color: var(--color-secondary-500);
-  border-radius: var(--radius-full);
+.mobile-nav-link.active .mobile-nav-link-icon {
+  background-color: rgba(214, 164, 41, 0.22);
+  color: var(--color-accent-600);
 }
 
 body.mobile-menu-open .header {
@@ -611,7 +607,21 @@ body.mobile-menu-open .header .logo-text {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* Mobile Menu */
+/* Mobile Menu
+   ===================================
+   Panel a pantalla completa. Antes el contenido quedaba centrado
+   (texto + íconos centrados, sublistas centradas con un borde a la
+   izquierda que no alineaba con nada) y varias clases usadas en el JSX
+   no tenían NINGUNA regla acá (.mobile-nav-link-icon, .mobile-nav-sublist,
+   .mobile-menu-cta-row, .mobile-menu-tasar-btn, .mobile-menu-phone-btn),
+   así que se veían como texto azul de link sin estilar encima del
+   fondo verde — esa combinación era la causa principal de que el menú
+   se viera roto/feo en celular.
+
+   Ahora es una lista alineada a la izquierda (patrón estándar de menú
+   de navegación: ícono + label + jerarquía clara), con Servicios y
+   Herramientas como acordeón colapsable para que el listado no sea
+   kilométrico. */
 .mobile-menu {
   position: fixed;
   top: 0;
@@ -624,7 +634,6 @@ body.mobile-menu-open .header .logo-text {
     var(--color-primary-700);
   z-index: 999;
   display: flex;
-  align-items: center;
   justify-content: center;
   opacity: 0;
   visibility: hidden;
@@ -636,9 +645,10 @@ body.mobile-menu-open .header .logo-text {
   visibility: visible;
 }
 
-.mobile-nav-list {
-  list-style: none;
-  text-align: center;
+.mobile-nav {
+  width: 100%;
+  max-width: 420px;
+  padding: calc(56px + var(--safe-top, 0px) + var(--space-6)) var(--space-6) var(--space-6);
 }
 
 @media (max-width: 1023px) {
@@ -647,7 +657,6 @@ body.mobile-menu-open .header .logo-text {
     max-height: 100dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: var(--space-6);
     scrollbar-width: none;
   }
 
@@ -656,7 +665,14 @@ body.mobile-menu-open .header .logo-text {
   }
 }
 
-/* Entrada escalonada: cada link aparece un poco después que el anterior
+.mobile-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Entrada escalonada: cada item aparece un poco después que el anterior
    cuando se abre el menú, en vez de que todo el bloque aparezca de golpe
    — le da mucho más pulido a la apertura.
 
@@ -672,109 +688,234 @@ body.mobile-menu-open .header .logo-text {
    estática normal) pero ningún link ni el botón de WhatsApp llegaban
    a mostrarse nunca. Con `transition` en vez de `animation`, el estado
    final (opacity:1) lo fija una regla CSS normal y estática
-   (`.mobile-menu.active .mobile-nav-list li`), no un keyframe — así
+   (`.mobile-menu.active .mobile-nav-list > li`), no un keyframe — así
    que aunque la transición en sí no llegue a animarse suave por algún
-   motivo, el link igual termina visible (sólo se pierde el efecto de
-   "entra suave", nunca el contenido). */
-.mobile-nav-list li {
+   motivo, el item igual termina visible (sólo se pierde el efecto de
+   "entra suave", nunca el contenido).
+
+   Se usa el combinador `>` (sólo hijos directos de .mobile-nav-list)
+   para que esto anime nada más la entrada de los items de primer
+   nivel — los links dentro de una sublista de Servicios/Herramientas
+   ya se muestran/ocultan con la animación propia del acordeón
+   (.mobile-nav-sublist), no con este stagger. */
+.mobile-nav-list > li {
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 420ms var(--header-ease), transform 420ms var(--header-ease);
 }
 
-.mobile-menu.active .mobile-nav-list li {
+.mobile-menu.active .mobile-nav-list > li {
   opacity: 1;
   transform: translateY(0);
 }
 
-.mobile-menu.active .mobile-nav-list li:nth-child(1) { transition-delay: 60ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(2) { transition-delay: 100ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(3) { transition-delay: 140ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(4) { transition-delay: 180ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(5) { transition-delay: 210ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(6) { transition-delay: 230ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(7) { transition-delay: 250ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(8) { transition-delay: 270ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(9) { transition-delay: 290ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(10) { transition-delay: 310ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(11) { transition-delay: 330ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(12) { transition-delay: 350ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(13) { transition-delay: 370ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(1) { transition-delay: 60ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(2) { transition-delay: 100ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(3) { transition-delay: 140ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(4) { transition-delay: 180ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(5) { transition-delay: 210ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(6) { transition-delay: 230ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(7) { transition-delay: 250ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(8) { transition-delay: 270ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(9) { transition-delay: 290ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(10) { transition-delay: 310ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(11) { transition-delay: 330ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(12) { transition-delay: 350ms; }
+.mobile-menu.active .mobile-nav-list > li:nth-child(13) { transition-delay: 370ms; }
+
+.mobile-nav-divider {
+  display: block;
+  height: 1px;
+  margin: var(--space-4) var(--space-2);
+  background-color: rgba(255, 255, 255, 0.14);
+  border: none;
+}
 
 .mobile-nav-link {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.3;
-  color: white;
-  padding: var(--space-4) 0;
-  transition: color 200ms ease, transform 200ms ease;
-  min-height: 48px;
-  min-width: 48px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #FFFFFF;
+  text-align: left;
+  transition: background-color 220ms var(--header-ease), color 220ms var(--header-ease),
+    transform 220ms var(--header-ease);
 }
 
 .mobile-nav-link:hover {
-  color: var(--color-secondary-500);
-  transform: translateX(8px);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  transform: translateX(4px);
 }
 
 .mobile-nav-link:active {
-  transform: translateX(8px) scale(0.98);
-  color: var(--color-secondary-500);
-}
-
-.mobile-nav-sublink {
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.3;
-  color: rgba(255, 255, 255, 0.75);
-  padding-left: var(--space-4);
-  padding-top: var(--space-2);
-  padding-bottom: var(--space-2);
-  border-left: 2px solid rgba(255, 255, 255, 0.2);
-  margin-left: var(--space-1);
-  transition: color 200ms ease, transform 200ms ease, border-color 200ms ease;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-}
-
-.mobile-nav-sublink:hover {
-  border-left-color: var(--color-secondary-500);
-}
-
-.mobile-nav-sublink:active {
-  border-left-color: var(--color-secondary-500);
-  transform: scale(0.98);
-}
-
-.mobile-nav-link {
-  transition: all 220ms var(--header-ease);
+  transform: translateX(4px) scale(0.98);
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .mobile-nav-link:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-focus-ring);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+}
+
+/* Chip circular detrás de cada ícono — antes .mobile-nav-link-icon no
+   tenía ni una sola regla, así que los íconos de lucide-react salían
+   pegados al texto (sin gap) y sin ningún tratamiento visual. */
+.mobile-nav-link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
-  padding: var(--space-4);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  transition: background-color 220ms var(--header-ease), color 220ms var(--header-ease);
+}
+
+.mobile-nav-link:hover .mobile-nav-link-icon {
+  background-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Grupos con submenú (Servicios / Herramientas): una fila con el link
+   principal (va directo a /servicios o /herramientas) + un botón
+   aparte sólo para expandir/colapsar la sublista — así un mismo tap no
+   tiene que decidir entre "navegar" o "desplegar", cada acción tiene
+   su propio botón con su propio target táctil de 44px+. */
+.mobile-nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.mobile-nav-group-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-nav-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-full);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.mobile-nav-group-toggle svg {
+  transition: transform 280ms var(--header-ease);
+}
+
+.mobile-nav-group-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+.mobile-nav-group-toggle.open {
+  color: var(--color-accent-600);
+}
+
+.mobile-nav-group-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+.mobile-nav-group-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
+}
+
+/* Antes esta clase no tenía NINGUNA regla — la sublista se mostraba
+   siempre expandida, como una lista con viñetas por defecto del
+   navegador (sin list-style:none) y centrada por herencia de
+   .mobile-nav-list. Ahora es un acordeón real: colapsada por defecto,
+   se anima con max-height al abrir/cerrar. */
+.mobile-nav-sublist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding-left: calc(40px + var(--space-3));
+  margin-top: 0;
+  transition: max-height 320ms var(--header-ease), opacity 260ms ease,
+    margin-top 320ms var(--header-ease);
+}
+
+.mobile-nav-sublist.open {
+  max-height: 240px;
+  opacity: 1;
+  margin-top: var(--space-1);
+}
+
+.mobile-nav-sublink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: left;
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+
+.mobile-nav-sublink:hover {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-left-color: var(--color-secondary-500);
+}
+
+.mobile-nav-sublink:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-nav-sublink.active {
+  color: var(--color-accent-600);
+  border-left-color: var(--color-accent-600);
 }
 
 .mobile-nav-sublink:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-focus-ring);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  border-left-color: var(--color-secondary-500);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
 }
 
+/* CTA final: WhatsApp a todo el ancho + Tasación/Llamar en una fila de
+   2 columnas. Antes .mobile-menu-cta-row, .mobile-menu-tasar-btn y
+   .mobile-menu-phone-btn no tenían ni una sola regla de CSS — "Tasá tu
+   propiedad" y "Llamar" se veían como texto de link sin estilar (azul,
+   subrayado) encima del verde del menú. Esta es la causa principal de
+   que el menú móvil se viera roto/incompleto. */
 .mobile-menu-cta {
-  margin-top: var(--space-12);
-  text-align: center;
+  margin-top: var(--space-10);
+  padding-bottom: var(--safe-bottom, 0px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   opacity: 0;
   transform: translateY(14px);
   transition: opacity 420ms var(--header-ease), transform 420ms var(--header-ease);
@@ -787,5 +928,55 @@ body.mobile-menu-open .header .logo-text {
 }
 
 .mobile-menu-cta .btn-whatsapp {
+  width: 100%;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-menu-cta-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.mobile-menu-tasar-btn,
+.mobile-menu-phone-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 48px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  background-color: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  transition: background-color 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+/* Si no hay teléfono cargado (phoneTel es falsy) el botón de Tasación
+   queda solo en la fila — que ocupe el ancho completo en vez de quedar
+   angosto y descentrado a la izquierda. */
+.mobile-menu-cta-row .mobile-menu-tasar-btn:only-child {
+  flex: 1 1 100%;
+}
+
+.mobile-menu-tasar-btn:hover,
+.mobile-menu-phone-btn:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+.mobile-menu-tasar-btn:active,
+.mobile-menu-phone-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.mobile-menu-tasar-btn:focus-visible,
+.mobile-menu-phone-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45);
 }
