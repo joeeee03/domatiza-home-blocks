@@ -206,3 +206,10 @@
   flex: 1;
   min-width: 0;
 }
+
+@media (max-width: 767px) {
+  .properties-grid:not(.properties-grid--featured) .property-image-nav-btn {
+    width: 44px;   /* antes: 40px */
+    height: 44px;  /* antes: 40px */
+  }
+}
