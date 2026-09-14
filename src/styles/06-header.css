@@ -36,25 +36,9 @@
   right: 0;
   z-index: 1000;
   height: var(--header-h);
-  /* CLAVE del centrado vertical real: .header centra directamente a su
-     único hijo (.container) con flexbox. Antes .header-content tenía
-     "height: 100%" para llenar el alto del header, pero su padre directo
-     es .container — que NO tiene una altura definida (es "auto") — así
-     que ese 100% nunca se aplicaba realmente (un % de altura no funciona
-     contra un contenedor de altura auto). El resultado era que todo el
-     bloque (logo + nav + botones) quedaba con su altura natural (~40px)
-     pegado arriba del header, con TODO el espacio libre acumulado abajo:
-     eso era el "pegado arriba" que se veía. Centrando acá, en el propio
-     .header, el problema desaparece sin importar cuánto mida el
-     contenido interno. */
   display: flex;
   align-items: center;
   background: linear-gradient(to bottom, rgba(13, 55, 51, 0.85) 0%, rgba(13, 55, 51, 0.55) 60%, transparent 100%);
-  /* Sin scroll no queremos ninguna línea separando el header del contenido
-     (se ve muy finita/sucia sobre la imagen del hero); por eso el color
-     arranca transparente. Al hacer scroll, .header.scrolled más abajo pisa
-     este color con var(--color-border) y ahí sí se ve la línea — ese
-     comportamiento no cambia. */
   border-bottom: 1px solid transparent;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
@@ -62,9 +46,6 @@
     border-color 320ms var(--header-ease), backdrop-filter 320ms var(--header-ease);
 }
 
-/* Fondo "vidrio" prolijo al scrollear, en vez de un blanco plano: un poco
-   de transparencia + blur le da profundidad y separa el header del
-   contenido sin perder legibilidad. */
 .header.scrolled {
   background: rgba(255, 255, 255, 0.92);
   border-bottom-color: var(--color-border);
@@ -73,9 +54,6 @@
   backdrop-filter: blur(14px) saturate(1.4);
 }
 
-/* Línea de acento sutil que aparece pegada al borde inferior del header
-   una vez que scrolleamos — un detalle "premium" que además refuerza la
-   marca sin agregar ruido visual. */
 .header::before {
   content: '';
   position: absolute;
@@ -95,10 +73,6 @@
   transform: scaleX(1);
 }
 
-/* Header content is dark by default (correct once the header has a white
-   background). While the header is still transparent/over the hero image,
-   or while the full-screen mobile menu is open, flip everything to white
-   so it stays legible against the dark backdrop. */
 .header:not(.scrolled) .nav-link,
 .header:not(.scrolled) .dropdown-toggle,
 .header:not(.scrolled) .header-whatsapp,
@@ -149,19 +123,11 @@
   background-color: var(--color-accent-600);
 }
 
-/* The rule above only covers the transparent/hero state. Once the header
-   has scrolled to its solid background, hovering a nav link (or a
-   Servicios/Herramientas dropdown toggle, which also carries .nav-link)
-   showed only the underline with no color change — inconsistent with the
-   richer hover feedback at the top of the page. */
 .header.scrolled .nav-link:hover,
 .header.scrolled .dropdown-toggle:hover {
   color: var(--color-secondary-600);
 }
 
-/* Active page indicator — a persistent underline (not just on hover) so
-   people can see which section of the site they're currently on. Grows
-   from the center outward, matching the hover animation direction. */
 .nav-link.active::after {
   transform: scaleX(1);
 }
@@ -194,9 +160,6 @@
   border-radius: var(--radius-full);
 }
 
-/* Keep the header legible while the full-screen mobile menu is open, even
-   if the page had already scrolled (and picked up a solid background)
-   before the menu was opened. */
 body.mobile-menu-open .header {
   background: var(--color-primary-700);
   border-bottom-color: transparent;
@@ -213,9 +176,6 @@ body.mobile-menu-open .header .header-phone {
   color: #FFFFFF;
 }
 
-/* The hamburger button had no hover feedback at all — every other icon
-   button in the header (WhatsApp, phone) gets a soft highlight, so this
-   one felt dead by comparison. */
 .mobile-menu-toggle {
   border-radius: var(--radius-full);
   transition: background-color 200ms ease, transform 150ms ease;
@@ -246,22 +206,10 @@ body.mobile-menu-open .header .header-utils .btn-secondary {
   border-color: rgba(255, 255, 255, 0.75);
 }
 
-/* .header ahora es flex para centrar verticalmente a .container (ver
-   comentario en .header). Por defecto, un hijo flex NO se estira a lo
-   ancho como sí lo hacía un <div> de bloque normal — sin esto, .container
-   se encogería a su contenido en vez de ocupar todo el ancho del header. */
 .header > .container {
   width: 100%;
 }
 
-/* header-content usa Grid en lugar de space-between: así el bloque central
-   (nav) queda realmente centrado en el ancho disponible en pantallas muy
-   anchas, y logo / utils quedan anclados cada uno a su punta. Además, el
-   logo, el <nav> y .header-utils comparten TODOS la misma altura de
-   referencia explícita (--header-item-h, ver más abajo) en vez de quedar
-   cada uno con una altura "auto" distinta — así el centrado vertical no
-   depende de que el navegador calcule alturas de contenido dispares
-   (texto, ícono, botón con borde) y quede pixel-perfecto siempre. */
 .header-content {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -279,13 +227,6 @@ body.mobile-menu-open .header .header-utils .btn-secondary {
   transition: opacity 200ms ease, transform 200ms var(--header-ease);
 }
 
-/* Caja del isotipo: cuadrada (el logo real es 1:1, no el rectángulo
-   4:1 del viejo SVG local) y con alto fijo (--brand-logo-h) — el ancho
-   sale igual al alto por la aspect-ratio 1/1, así no hace falta un
-   ancho fijo en px aparte. La imagen (ver .logo-img más abajo) se
-   posiciona absoluta dentro de esta caja y usa object-fit: contain, así
-   que si en algún tenant el logo real no fuera cuadrado tampoco se
-   deforma — sólo se ve un poco más chico dentro del cuadrado. */
 .logo-mark {
   position: relative;
   display: block;
@@ -294,16 +235,6 @@ body.mobile-menu-open .header .header-utils .btn-secondary {
   aspect-ratio: 1 / 1;
 }
 
-/* Nombre de la inmobiliaria al lado del isotipo. Blanco por defecto
-   (header transparente sobre el hero) y pasa a --color-text-primary
-   (casi negro) apenas el header scrollea — mismo criterio de color que
-   ya usan .nav-link y el resto de los elementos del header.
-   Oculto por defecto y sólo visible desde 1280px: a este tamaño de
-   fuente no entra junto al logo + nav + utils por debajo de esa
-   franja — la propia franja 1024-1279 ya venía ajustada de antes (por
-   eso ahí se esconde el botón "Tasá tu propiedad" más abajo en este
-   archivo), así que el nombre recién aparece donde el diseño original
-   ya preveía "más aire": 1280px+. */
 .logo-text {
   display: inline-block;
   font-family: var(--font-display);
@@ -338,8 +269,6 @@ body.mobile-menu-open .header .header-utils .btn-secondary {
   color: var(--color-text-primary);
 }
 
-/* El menú móvil a pantalla completa siempre tiene fondo oscuro, así que
-   el nombre debe seguir en blanco aunque el header ya esté scrolleado. */
 body.mobile-menu-open .header .logo-text {
   color: #FFFFFF;
 }
@@ -360,9 +289,6 @@ body.mobile-menu-open .header .logo-text {
   padding: var(--space-1);
 }
 
-/* Único isotipo (mismo asset que el footer) posicionado absoluto dentro
-   de .logo-mark, escalado a la caja vía object-fit — ya no hay swap de
-   imágenes al scrollear (ver comentario en Header.tsx). */
 .logo-img {
   position: absolute;
   top: 0;
@@ -376,9 +302,6 @@ body.mobile-menu-open .header .logo-text {
 /* Desktop Navigation */
 .nav {
   display: none;
-  /* Ancla el propio <nav> al centro de la columna del medio del grid,
-     en vez de dejarlo estirarse — así el bloque de links queda
-     visualmente centrado en vez de pegado a la izquierda. */
   justify-self: center;
 }
 
@@ -395,13 +318,6 @@ body.mobile-menu-open .header .logo-text {
   align-items: center;
 }
 
-/* line-height: 1 es la clave de la alineación vertical prolija: los
-   .nav-link heredaban el line-height: 1.6 del body, lo que generaba una
-   caja de línea bastante más alta que el texto real (24px de caja para
-   15px de fuente) y corría el bloque de texto unos px respecto al logo y
-   los botones — visualmente "descentrado" aunque técnicamente el flex sí
-   estaba centrando cada elemento. Con line-height: 1 la caja de línea
-   coincide con la altura real del glifo y todo queda sobre el mismo eje. */
 .nav-link {
   display: inline-block;
   font-size: 15px;
@@ -480,9 +396,6 @@ body.mobile-menu-open .header .logo-text {
   transform: rotate(180deg);
 }
 
-/* Tarjeta del submenú: más presencia (blur + borde + acento superior) y
-   una pequeña "flecha" que la conecta visualmente con el link que la
-   abre, en vez de aparecer flotando sin relación con su disparador. */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 14px);
@@ -544,9 +457,6 @@ body.mobile-menu-open .header .logo-text {
   position: relative;
 }
 
-/* Barrita de acento a la izquierda que "entra" con la animación en vez de
-   un simple cambio de fondo — sensación más cuidada, coherente con el
-   resto del rediseño. */
 .dropdown-menu a::before {
   content: '';
   width: 3px;
@@ -585,12 +495,6 @@ body.mobile-menu-open .header .logo-text {
   justify-self: end;
 }
 
-/* Ancho y alto explícitos e idénticos en los tres elementos interactivos
-   del bloque derecho (WhatsApp, teléfono y el botón "Tasá tu propiedad")
-   para que ninguno se vea más chico o más grande que el resto — antes el
-   botón de texto tenía una altura que dependía sólo de su padding y podía
-   diferir en 1–3px de los círculos de ícono, lo que se notaba como
-   "descentrado" al mirar la fila completa. */
 .header-whatsapp,
 .header-phone {
   display: flex;
@@ -603,10 +507,6 @@ body.mobile-menu-open .header .logo-text {
   transition: color 200ms ease, background-color 200ms ease, transform 200ms var(--header-ease), box-shadow 200ms ease;
 }
 
-/* Lucide reemplaza cada <i data-lucide="..."> por un <svg> real al
-   correr lucide.createIcons() — un selector "i" nunca iba a matchear
-   ahí. Apuntamos directo al svg resultante para poder controlar su
-   tamaño. */
 .header-whatsapp svg,
 .header-phone svg {
   width: 18px;
@@ -639,28 +539,15 @@ body.mobile-menu-open .header .logo-text {
   box-shadow: none;
 }
 
-/* El CTA de texto ahora comparte altura exacta con los botones de ícono
-   de al lado (misma variable --header-item-h) y suma un pequeño brillo
-   diagonal al pasar el mouse, coherente con el resto de los hovers
-   "premium" del header. */
 .header-utils .btn-secondary {
   position: relative;
   height: var(--header-item-h);
   overflow: hidden;
   isolation: isolate;
-  /* Misma curva y duración que .header-whatsapp/.header-phone (ver más
-     arriba) para que el "salto" al hacer hover se sienta igual en los 3
-     elementos de .header-utils, en vez de tener un timing propio distinto
-     sólo para este botón. */
   transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease,
     transform 200ms var(--header-ease), box-shadow 200ms ease;
 }
 
-/* Hover del botón ya scrolleado: antes caía en el hover genérico de
-   .btn-secondary (pensado para botones sueltos del resto del sitio) y
-   levantaba sólo -1px con una sombra distinta a la de whatsapp/teléfono.
-   Lo dejamos explícito acá para que comparta el mismo levantamiento y la
-   misma sombra que sus vecinos de .header-utils. */
 .header.scrolled .header-utils .btn-secondary:hover {
   background-color: var(--color-primary-100);
   border-color: var(--color-primary-600);
@@ -693,7 +580,6 @@ body.mobile-menu-open .header .logo-text {
   background: none;
   border: none;
   cursor: pointer;
-  /* Mejora accesibilidad táctil: mínimo 44x44px según WCAG */
   min-width: 44px;
   min-height: 44px;
 }
@@ -755,36 +641,13 @@ body.mobile-menu-open .header .logo-text {
   text-align: center;
 }
 
-/* Contenedor real de la navegación dentro del menu movil a pantalla
-   completa (el <nav className="mobile-nav"> que envuelve .mobile-nav-list
-   y .mobile-menu-cta en Header.tsx). Antes no tenía ninguna regla propia:
-   ni .mobile-menu (el overlay fixed que lo centra con flexbox) ni este
-   elemento limitaban su alto ni ofrecían scroll, así que si el contenido
-   (11 links + sublinks + CTA de WhatsApp) superaba el alto disponible, no
-   había forma de llegar a lo que quedaba afuera -- el body ya está bloqueado
-   (overflow:hidden, ver Header.tsx) mientras el menu esta abierto. El limite
-   y el scroll van acá, en .mobile-nav (el hijo), y NO en .mobile-menu (el
-   padre que centra), para no romper el centrado vertical cuando el
-   contenido sí entra completo: si el contenido es mas bajo que el alto
-   disponible, .mobile-nav queda mas chico que su max-height y .mobile-menu
-   lo sigue centrando igual que antes; si lo supera, .mobile-nav se topa con
-   el limite y scrollea internamente, sin que el body se mueva. Scoped a
-   <=1023px porque es el rango real donde este menu full-screen existe: el
-   .nav de escritorio y el ocultamiento de .mobile-menu-toggle arrancan en
-   min-width:1024px (ver 26-chrome-responsive.css). */
 @media (max-width: 1023px) {
   .mobile-nav {
     max-height: 100vh;
     max-height: 100dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    /* Aire al final para que el ultimo elemento (el CTA de WhatsApp) no
-       quede pegado al borde inferior cuando el menu si necesita scrollear. */
     padding-bottom: var(--space-6);
-    /* El scroll debe seguir funcionando (touch, teclado, rueda) pero sin
-       mostrar una scrollbar que rompa la estetica del overlay a pantalla
-       completa -- mismo criterio que se usara en la Capa 4 para las tabs
-       de ficha de propiedad. */
     scrollbar-width: none;
   }
 
@@ -795,38 +658,48 @@ body.mobile-menu-open .header .logo-text {
 
 /* Entrada escalonada: cada link aparece un poco después que el anterior
    cuando se abre el menú, en vez de que todo el bloque aparezca de golpe
-   — le da mucho más pulido a la apertura. Sólo corre con el menú activo,
-   así no interfiere si el usuario tiene "reduce motion" desactivado los
-   demás efectos. */
+   — le da mucho más pulido a la apertura.
+
+   FIX (menú móvil en verde vacío / sólo se ve la X): esto antes se hacía
+   con `animation: mobileNavItemIn ... forwards`, dependiendo de que el
+   `@keyframes` llegara a dispararse para que los links pasaran de
+   opacity:0 a opacity:1. Si esa animación no arrancaba por cualquier
+   motivo (ver next.config.ts: transpilePackages hace que este CSS
+   cruce el límite de paquete @domatiza/home-blocks, y ahí el bundler
+   puede llegar a no resolver bien el `@keyframes` en el build de
+   producción), los <li> se quedaban en opacity:0 PARA SIEMPRE — el
+   fondo verde de .mobile-menu se veía perfecto (esa sí es una regla
+   estática normal) pero ningún link ni el botón de WhatsApp llegaban
+   a mostrarse nunca. Con `transition` en vez de `animation`, el estado
+   final (opacity:1) lo fija una regla CSS normal y estática
+   (`.mobile-menu.active .mobile-nav-list li`), no un keyframe — así
+   que aunque la transición en sí no llegue a animarse suave por algún
+   motivo, el link igual termina visible (sólo se pierde el efecto de
+   "entra suave", nunca el contenido). */
 .mobile-nav-list li {
   opacity: 0;
   transform: translateY(14px);
+  transition: opacity 420ms var(--header-ease), transform 420ms var(--header-ease);
 }
 
 .mobile-menu.active .mobile-nav-list li {
-  animation: mobileNavItemIn 420ms var(--header-ease) forwards;
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.mobile-menu.active .mobile-nav-list li:nth-child(1) { animation-delay: 60ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(2) { animation-delay: 100ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(3) { animation-delay: 140ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(4) { animation-delay: 180ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(5) { animation-delay: 210ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(6) { animation-delay: 230ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(7) { animation-delay: 250ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(8) { animation-delay: 270ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(9) { animation-delay: 290ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(10) { animation-delay: 310ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(11) { animation-delay: 330ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(12) { animation-delay: 350ms; }
-.mobile-menu.active .mobile-nav-list li:nth-child(13) { animation-delay: 370ms; }
-
-@keyframes mobileNavItemIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+.mobile-menu.active .mobile-nav-list li:nth-child(1) { transition-delay: 60ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(2) { transition-delay: 100ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(3) { transition-delay: 140ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(4) { transition-delay: 180ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(5) { transition-delay: 210ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(6) { transition-delay: 230ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(7) { transition-delay: 250ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(8) { transition-delay: 270ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(9) { transition-delay: 290ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(10) { transition-delay: 310ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(11) { transition-delay: 330ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(12) { transition-delay: 350ms; }
+.mobile-menu.active .mobile-nav-list li:nth-child(13) { transition-delay: 370ms; }
 
 .mobile-nav-link {
   display: block;
@@ -837,7 +710,6 @@ body.mobile-menu-open .header .logo-text {
   color: white;
   padding: var(--space-4) 0;
   transition: color 200ms ease, transform 200ms ease;
-  /* Mejora accesibilidad táctil: área de toque más grande */
   min-height: 48px;
   min-width: 48px;
   display: flex;
@@ -867,7 +739,6 @@ body.mobile-menu-open .header .logo-text {
   border-left: 2px solid rgba(255, 255, 255, 0.2);
   margin-left: var(--space-1);
   transition: color 200ms ease, transform 200ms ease, border-color 200ms ease;
-  /* Mejora accesibilidad táctil */
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -906,11 +777,13 @@ body.mobile-menu-open .header .logo-text {
   text-align: center;
   opacity: 0;
   transform: translateY(14px);
+  transition: opacity 420ms var(--header-ease), transform 420ms var(--header-ease);
 }
 
 .mobile-menu.active .mobile-menu-cta {
-  animation: mobileNavItemIn 420ms var(--header-ease) forwards;
-  animation-delay: 400ms;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 400ms;
 }
 
 .mobile-menu-cta .btn-whatsapp {
