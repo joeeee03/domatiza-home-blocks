@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -19,9 +19,8 @@ const CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33
 const AXIS_LOCK_THRESHOLD = 8;
 const SWIPE_THRESHOLD = 45;
 
-const SLIDE_STYLE: CSSProperties = {
+const SLIDE_BASE_STYLE: CSSProperties = {
   position: 'relative',
-  width: 'calc(100% / 3)',
   height: '100%',
   flexShrink: 0,
   flexGrow: 0,
@@ -62,24 +61,28 @@ const SLIDE_STYLE: CSSProperties = {
  * con `translateX`. En reposo muestra la del medio; mientras se arrastra,
  * `dragX` (px) se suma a esa posición para que siga al dedo sin demora.
  *
- * BUGFIX (Sep 2026): el borde con la foto siguiente asomando del lado
- * derecho al terminar de deslizar venía de mezclar unidades — la
- * versión anterior, al soltar el dedo, saltaba a
- * `dragX = ± containerRef.offsetWidth` (un entero en píxeles), mientras
- * que el resto del posicionamiento (`-100% / 3`) es un porcentaje que
- * el navegador resuelve con precisión de subpíxel. En la mayoría de los
- * anchos de pantalla esos dos números no coinciden exactamente, y esa
- * diferencia dejaba una rendija visible con la foto siguiente asomando.
- * La solución: en vez de sumar un ancho en píxeles al soltar, `commitDir`
- * (0 | 1 | -1) desplaza el track otro tercio exacto (`100% / 3`,
- * resuelto siempre en CSS, nunca calculado en JS) — todo el recorrido
- * queda expresado en la misma unidad de punta a punta, así que encastra
- * pixel perfect sin importar el ancho real de la tarjeta. El único valor
- * en píxeles que sobrevive es `dragX`, y sólo mientras el dedo se mueve
- * (ahí sí tiene que responder en píxeles reales al gesto); al soltar
- * vuelve a 0 apenas se decide el destino, y la transición CSS interpola
- * sola desde el punto exacto donde iba el dedo hasta el nuevo destino
- * porcentual.
+ * BUGFIX (Sep 2026, v2): seguía quedando un hilo de la foto siguiente
+ * asomando del lado derecho al terminar de deslizar. La causa: el ancho
+ * de cada foto (`width: calc(100% / 3)`) y el desplazamiento del track
+ * (`translateX(calc(-100% / 3))`) son dos porcentajes que, en teoría,
+ * salen del mismo cálculo — pero el motor de layout redondea el ancho
+ * de cada slide al pixel de dispositivo más cercano para que la grilla
+ * de la pantalla quede nítida, mientras que `transform` interpola en
+ * punto flotante sin ese mismo redondeo. Con anchos de tarjeta que no
+ * son múltiplos exactos de 3 (la gran mayoría), esos dos redondeos no
+ * coinciden y dejan un hueco de uno o dos píxeles con la foto siguiente
+ * asomando — más notorio al terminar de deslizar porque ahí la tarjeta
+ * queda quieta y el ojo lo detecta.
+ *
+ * La solución definitiva: dejar de calcular en porcentaje y medir el
+ * ancho real del contenedor en píxeles (`slideWidth`, vía
+ * `ResizeObserver`) una única vez por tamaño de pantalla, y usar ESE
+ * MISMO NÚMERO tanto para el ancho de cada foto como para el
+ * desplazamiento del track. Al ser literalmente el mismo valor no hay
+ * dos redondeos independientes que puedan desalinearse — encastra pixel
+ * perfect sin importar el ancho real de la tarjeta. Mientras el ancho
+ * todavía no se midió (primer render antes de que corra el efecto) se
+ * usa el porcentaje como respaldo, para no dejar la foto en 0px.
  *
  * Al soltar: si el gesto superó `SWIPE_THRESHOLD`, se anima el resto del
  * camino hasta el borde (con transición CSS, activada sólo en ese
@@ -110,6 +113,26 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     e.stopPropagation();
     setIndex((i) => (i + 1) % total);
   }
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [slideWidth, setSlideWidth] = useState(0);
+
+  // Medido en píxeles reales del contenedor — ver BUGFIX v2 más arriba.
+  // useLayoutEffect (no useEffect) para que corra antes del primer
+  // paint del navegador y no haya un parpadeo con el ancho en 0.
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el || !hasMultipleImages) return;
+    const updateWidth = () => setSlideWidth(el.offsetWidth);
+    updateWidth();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateWidth);
+      return () => window.removeEventListener('resize', updateWidth);
+    }
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMultipleImages]);
 
   const touchRef = useRef<{ x: number; y: number; axis: 'x' | 'y' | null } | null>(null);
   const [dragX, setDragX] = useState(0);
@@ -163,7 +186,24 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     setIsAnimating(false);
   }
 
+  // Todo en la misma unidad que el ancho real de cada foto (px) — así
+  // el desplazamiento del track siempre encastra exacto con el borde de
+  // la foto, sin depender de que dos porcentajes redondeen igual.
+  // `slideWidth === 0` sólo pasa en el primer render, antes de que el
+  // efecto mida el contenedor: ahí se usa el porcentaje de siempre como
+  // respaldo transitorio.
+  const hasMeasuredWidth = slideWidth > 0;
+  const trackWidthPx = slideWidth * 3;
+  const restShiftPx = -slideWidth;
+  const nextShiftPx = -slideWidth * 2;
+  const prevShiftPx = 0;
+  const commitShiftPx = commitDir === 1 ? nextShiftPx : commitDir === -1 ? prevShiftPx : restShiftPx;
   const trackShift = commitDir === 1 ? '-200% / 3' : commitDir === -1 ? '0%' : '-100% / 3';
+  const trackWidthStyle = hasMeasuredWidth ? `${trackWidthPx}px` : '300%';
+  const trackTransform = hasMeasuredWidth
+    ? `translateX(${commitShiftPx + dragX}px)`
+    : `translateX(calc(${trackShift} + ${dragX}px))`;
+  const slideWidthStyle = hasMeasuredWidth ? `${slideWidth}px` : 'calc(100% / 3)';
 
   const MAX_VISIBLE_DOTS = 5;
   const dotCount = Math.min(total, MAX_VISIBLE_DOTS);
@@ -172,6 +212,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
 
   return (
     <div
+      ref={containerRef}
       className="property-image"
       style={{
         position: 'relative',
@@ -196,20 +237,20 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
             onTransitionEnd={handleTrackTransitionEnd}
             style={{
               display: 'flex',
-              width: '300%',
+              width: trackWidthStyle,
               height: '100%',
-              transform: `translateX(calc(${trackShift} + ${dragX}px))`,
+              transform: trackTransform,
               transition: isAnimating ? 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
               willChange: 'transform',
             }}
           >
-            <div style={SLIDE_STYLE} aria-hidden="true">
+            <div style={{ ...SLIDE_BASE_STYLE, width: slideWidthStyle }} aria-hidden="true">
               <Image src={prevImage} alt="" fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} loading="eager" />
             </div>
-            <div style={SLIDE_STYLE}>
+            <div style={{ ...SLIDE_BASE_STYLE, width: slideWidthStyle }}>
               <Image src={currentImage} alt={title} fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} />
             </div>
-            <div style={SLIDE_STYLE} aria-hidden="true">
+            <div style={{ ...SLIDE_BASE_STYLE, width: slideWidthStyle }} aria-hidden="true">
               <Image src={nextImage} alt="" fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} loading="eager" />
             </div>
           </div>
