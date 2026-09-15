@@ -156,9 +156,41 @@
   }
 
   section.hero {
-    padding-top: 56px; /* debe igualar la altura del header en mobile */
+    /* 56px = altura real del header en mobile + var(--space-8) de aire
+       para que el título no arranque pegado al borde del header. */
+    padding-top: calc(56px + var(--space-8));
     min-height: auto;
-    padding-bottom: var(--space-12);
+    padding-bottom: var(--space-16);
+  }
+
+  /* Hero — únicamente estas reglas, scopeadas con .hero / .hero-*, para
+     no afectar h1/botones de ninguna otra sección o página. Achican un
+     poco la tipografía y compactan el ritmo vertical título → subtítulo
+     → buscador → CTA para que se vea prolijo en pantallas chicas. */
+  .hero h1 {
+    font-size: clamp(28px, 8vw, 32px);
+    line-height: 1.2;
+    margin-bottom: var(--space-3);
+  }
+
+  .hero-subtitle {
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 320px;
+    margin-bottom: var(--space-8);
+  }
+
+  .search-box {
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .search-toggle {
+    margin-bottom: var(--space-4);
+  }
+
+  .hero-cta .btn {
+    font-size: 15px;
   }
 
   .search-fields {
@@ -195,6 +227,18 @@
   .property-content {
     padding: var(--space-4);
   }
+
+  /* Badge "Venta"/"Alquiler": solo en /propiedades (properties-grid sin
+     el modificador --featured) se acerca un poco mas a la esquina en
+     mobile, bajando un escalon respecto al valor base (var(--space-4) en
+     12-featured.css), en la misma proporcion en que .property-content de
+     arriba ya baja un escalon respecto a su padding de escritorio. El Home
+     ("Propiedades destacadas") queda afuera a proposito -- mismo patron de
+     exclusion que .property-image-nav-btn en 12-featured.css. */
+  .properties-grid:not(.properties-grid--featured) .property-badge {
+    top: var(--space-3);
+    left: var(--space-3);
+  }
 }
 
 /* Extra small screens (320px). Placed AFTER the general mobile block on
@@ -221,8 +265,32 @@
     font-size: 15px;
   }
 
+  /* Hero en pantallas muy chicas: un poco más compacto todavía. */
+  .hero h1 {
+    margin-bottom: var(--space-2);
+  }
+
+  .hero-subtitle {
+    font-size: 15px;
+    max-width: 280px;
+    margin-bottom: var(--space-6);
+  }
+
   .search-box {
-    padding: var(--space-6);
+    padding: var(--space-4);
+  }
+
+  /* Mismo criterio de exclusion que en el breakpoint de 767px de arriba:
+     solo /propiedades gana un escalon extra de padding util en pantallas
+     muy chicas -- el badge baja en la misma proporcion para no quedar
+     desalineado respecto al nuevo padding del contenido. Home no se toca. */
+  .properties-grid:not(.properties-grid--featured) .property-content {
+    padding: var(--space-3);
+  }
+
+  .properties-grid:not(.properties-grid--featured) .property-badge {
+    top: var(--space-2);
+    left: var(--space-2);
   }
 
   .property-specs {
