@@ -30,12 +30,16 @@ import type { AnchorHTMLAttributes, ImgHTMLAttributes, ReactNode } from 'react';
  */
 export interface HostLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
+  children?: ReactNode;
+  className?: string;
 }
 export interface HostImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt: string;
   width?: number;
   height?: number;
+  className?: string;
+  style?: React.CSSProperties;
   /**
    * Etapa 23: `next/image` soporta `fill` (la imagen ocupa 100% del
    * contenedor posicionado más cercano, en vez de un tamaño fijo) —
@@ -46,6 +50,17 @@ export interface HostImageProps extends ImgHTMLAttributes<HTMLImageElement> {
    * traduce a CSS — nunca se lo pasa tal cual a un `<img>` nativo.
    */
   fill?: boolean;
+  /**
+   * `next/image` soporta `sizes` para imágenes responsivas —
+   * usado en `PropertyCardImageView` para optimizar la carga
+   * de imágenes en diferentes tamaños de pantalla.
+   */
+  sizes?: string;
+  /**
+   * `next/image` soporta `loading` para controlar cuándo cargar
+   * la imagen ("lazy" o "eager").
+   */
+  loading?: 'lazy' | 'eager';
 }
 
 export type HostLinkComponent = (props: HostLinkProps) => ReactNode;
@@ -75,14 +90,21 @@ export const DEFAULT_LINK: HostLinkComponent = ({ href, children, ...rest }) => 
     {children}
   </a>
 );
-export const DEFAULT_IMAGE: HostImageComponent = ({ width, height, fill, style, ...rest }) =>
+export const DEFAULT_IMAGE: HostImageComponent = ({ width, height, fill, sizes, loading, style, ...rest }) =>
   fill ? (
     <img
       {...rest}
       style={{ ...style, position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      loading={loading}
     />
   ) : (
-    <img width={width} height={height} style={style} {...rest} />
+    <img 
+      width={width} 
+      height={height} 
+      style={style} 
+      loading={loading}
+      {...rest} 
+    />
   );
 
 export const DEFAULT_HOST_RENDERERS: HostRenderers = {
