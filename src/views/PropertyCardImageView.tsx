@@ -75,8 +75,8 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
   const hasMultipleImages = images.length > 1;
   const total = images.length;
   const currentImage = images[index] ?? images[0] ?? '/images/property-placeholder.svg';
-  const prevImage = hasMultipleImages ? images[(index - 1 + total) % total] : currentImage;
-  const nextImage = hasMultipleImages ? images[(index + 1) % total] : currentImage;
+  const prevImage = hasMultipleImages ? images[(index - 1 + total) % total] ?? currentImage : currentImage;
+  const nextImage = hasMultipleImages ? images[(index + 1) % total] ?? currentImage : currentImage;
 
   function goPrev(e: MouseEvent) {
     e.preventDefault();
