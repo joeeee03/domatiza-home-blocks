@@ -42,6 +42,7 @@ export * from './views/ServicesView';
 export * from './views/ToolsSectionView';
 export * from './views/FinalCtaView';
 export * from './views/PropertyCardImageView';
+export * from './views/PropertyCardRevealView';
 export * from './views/PropertyCardView';
 export * from './views/FeaturedPropertiesView';
 export * from './views/BlogPostCardView';

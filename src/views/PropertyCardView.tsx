@@ -2,6 +2,7 @@ import { Layers, MessageCircle, Bed, Maximize } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 import { whatsappLink } from '../lib/whatsappLink';
 import { PropertyCardImageView } from './PropertyCardImageView';
+import { PropertyCardRevealView } from './PropertyCardRevealView';
 
 export interface PropertyCardViewData {
   id: string | number;
@@ -22,7 +23,7 @@ export interface PropertyCardViewData {
 
 export interface PropertyCardViewProps {
   property: PropertyCardViewData;
-  /** Posición dentro de su grilla (0-based) — sólo para el `transitionDelay` del fade-in, ver el comentario original en `PropertyCard.tsx`. */
+  /** Posición dentro de su grilla (0-based) — sólo para el `transitionDelay` del fade-in, ver `PropertyCardRevealView.tsx`. */
   index?: number;
   Link: HostLinkComponent;
   Image: HostImageComponent;
@@ -35,7 +36,7 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
   const propertyHref = `/propiedades/${property.slug}`;
 
   return (
-    <div className="property-card fade-in" data-property-id={property.id} style={{ transitionDelay: `${(index % 4) * 80}ms` }}>
+    <PropertyCardRevealView propertyId={property.id} index={index}>
       <PropertyCardImageView
         images={property.images}
         title={property.title}
@@ -67,7 +68,7 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
           <Link href={propertyHref} className="btn btn-secondary btn-sm">
             Ver más
           </Link>
-          <a 
+          <a
             href={whatsappLink(waMessage, property.whatsappNumber)}
             className="btn btn-whatsapp btn-sm"
             target="_blank"
@@ -78,6 +79,6 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
           </a>
         </div>
       </div>
-    </div>
+    </PropertyCardRevealView>
   );
 }
