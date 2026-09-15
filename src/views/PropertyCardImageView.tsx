@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
+import { useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -20,10 +20,11 @@ const AXIS_LOCK_THRESHOLD = 8;
 const SWIPE_THRESHOLD = 45;
 
 const SLIDE_STYLE: CSSProperties = {
-  flex: '0 0 33.333%',
   position: 'relative',
-  width: '33.333%',
+  width: 'calc(100% / 3)',
   height: '100%',
+  flexShrink: 0,
+  flexGrow: 0,
 };
 
 /**
@@ -60,14 +61,35 @@ const SLIDE_STYLE: CSSProperties = {
  * actual / siguiente, cada una 1/3 del ancho del track) que se traduce
  * con `translateX`. En reposo muestra la del medio; mientras se arrastra,
  * `dragX` (px) se suma a esa posición para que siga al dedo sin demora.
+ *
+ * BUGFIX (Sep 2026): el borde con la foto siguiente asomando del lado
+ * derecho al terminar de deslizar venía de mezclar unidades — la
+ * versión anterior, al soltar el dedo, saltaba a
+ * `dragX = ± containerRef.offsetWidth` (un entero en píxeles), mientras
+ * que el resto del posicionamiento (`-100% / 3`) es un porcentaje que
+ * el navegador resuelve con precisión de subpíxel. En la mayoría de los
+ * anchos de pantalla esos dos números no coinciden exactamente, y esa
+ * diferencia dejaba una rendija visible con la foto siguiente asomando.
+ * La solución: en vez de sumar un ancho en píxeles al soltar, `commitDir`
+ * (0 | 1 | -1) desplaza el track otro tercio exacto (`100% / 3`,
+ * resuelto siempre en CSS, nunca calculado en JS) — todo el recorrido
+ * queda expresado en la misma unidad de punta a punta, así que encastra
+ * pixel perfect sin importar el ancho real de la tarjeta. El único valor
+ * en píxeles que sobrevive es `dragX`, y sólo mientras el dedo se mueve
+ * (ahí sí tiene que responder en píxeles reales al gesto); al soltar
+ * vuelve a 0 apenas se decide el destino, y la transición CSS interpola
+ * sola desde el punto exacto donde iba el dedo hasta el nuevo destino
+ * porcentual.
+ *
  * Al soltar: si el gesto superó `SWIPE_THRESHOLD`, se anima el resto del
  * camino hasta el borde (con transición CSS, activada sólo en ese
- * momento vía `isAnimating`) y al terminar la animación (`onTransitionEnd`)
- * recién ahí cambia el `index` y la posición vuelve al centro sin
- * transición — la foto del borde que se ve en ese instante es la misma
- * que pasa a ser la del centro, así que el cambio es invisible (el
- * truco clásico del carrusel infinito). Si no superó el umbral, se anima
- * de vuelta al centro sin cambiar de foto.
+ * momento vía `isAnimating`) y al terminar la animación
+ * (`onTransitionEnd`) recién ahí cambia el `index`, `commitDir` vuelve a
+ * 0 y la posición vuelve al centro sin transición — la foto del borde
+ * que se ve en ese instante es la misma que pasa a ser la del centro,
+ * así que el cambio es invisible (el truco clásico del carrusel
+ * infinito). Si no superó el umbral, se anima de vuelta al centro sin
+ * cambiar de foto.
  */
 export function PropertyCardImageView({ images, title, href, badgeClass, badgeLabel, Link, Image }: PropertyCardImageViewProps) {
   const [index, setIndex] = useState(0);
@@ -89,10 +111,9 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     setIndex((i) => (i + 1) % total);
   }
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const touchRef = useRef<{ x: number; y: number; axis: 'x' | 'y' | null } | null>(null);
-  const pendingDirRef = useRef<0 | 1 | -1>(0);
   const [dragX, setDragX] = useState(0);
+  const [commitDir, setCommitDir] = useState<0 | 1 | -1>(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
   function handleTouchStart(e: TouchEvent) {
@@ -100,7 +121,6 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     const t = e.touches[0];
     if (!t) return;
     touchRef.current = { x: t.clientX, y: t.clientY, axis: null };
-    pendingDirRef.current = 0;
     setIsAnimating(false);
   }
 
@@ -129,34 +149,29 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     const deltaX = t ? t.clientX - state.x : 0;
     setIsAnimating(true);
     if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
-      const width = containerRef.current?.offsetWidth ?? 0;
-      if (deltaX < 0) {
-        pendingDirRef.current = 1;
-        setDragX(-width);
-      } else {
-        pendingDirRef.current = -1;
-        setDragX(width);
-      }
-    } else {
-      pendingDirRef.current = 0;
-      setDragX(0);
+      setCommitDir(deltaX < 0 ? 1 : -1);
     }
+    setDragX(0);
   }
 
   function handleTrackTransitionEnd(e: TransitionEvent<HTMLDivElement>) {
     if (e.propertyName !== 'transform') return;
-    const dir = pendingDirRef.current;
-    pendingDirRef.current = 0;
-    if (dir !== 0) {
-      setIndex((i) => (dir === 1 ? (i + 1) % total : (i - 1 + total) % total));
+    if (commitDir !== 0) {
+      setIndex((i) => (commitDir === 1 ? (i + 1) % total : (i - 1 + total) % total));
     }
-    setDragX(0);
+    setCommitDir(0);
     setIsAnimating(false);
   }
 
+  const trackShift = commitDir === 1 ? '-200% / 3' : commitDir === -1 ? '0%' : '-100% / 3';
+
+  const MAX_VISIBLE_DOTS = 5;
+  const dotCount = Math.min(total, MAX_VISIBLE_DOTS);
+  const activeDot =
+    total <= MAX_VISIBLE_DOTS ? index : Math.round((index / (total - 1)) * (MAX_VISIBLE_DOTS - 1));
+
   return (
     <div
-      ref={containerRef}
       className="property-image"
       style={{
         position: 'relative',
@@ -183,7 +198,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
               display: 'flex',
               width: '300%',
               height: '100%',
-              transform: `translateX(calc(-100% / 3 + ${dragX}px))`,
+              transform: `translateX(calc(${trackShift} + ${dragX}px))`,
               transition: isAnimating ? 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
               willChange: 'transform',
             }}
@@ -211,6 +226,17 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
           <button type="button" className="property-image-nav-btn property-image-nav-next" aria-label="Imagen siguiente" onClick={goNext}>
             <ChevronRight aria-hidden="true" size={18} className="property-image-nav-icon" />
           </button>
+        </div>
+      )}
+
+      {hasMultipleImages && (
+        <div className="property-image-dots" aria-hidden="true">
+          {Array.from({ length: dotCount }).map((_, i) => (
+            <span
+              key={i}
+              className={`property-image-dot${i === activeDot ? ' property-image-dot--active' : ''}`}
+            />
+          ))}
         </div>
       )}
     </div>

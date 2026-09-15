@@ -135,13 +135,15 @@
   color: var(--color-text-primary);
 }
 
-/* Indicador de posición (dots). Oculto por defecto (desktop y Home) --
-   se muestra unicamente en mobile y solo para /propiedades, ver el
-   selector de exclusion .properties-grid:not(.properties-grid--featured)
-   en el bloque @media (max-width: 767px) de mas abajo, mismo patron que
-   ya usa .property-image-nav-btn en ese mismo bloque. pointer-events:
-   none porque es solo informativo, no interactivo -- no debe competir
-   con el Link de la imagen ni con las flechas de .property-image-nav. */
+/* Indicador de posición (dots). Oculto por defecto (desktop) -- se
+   muestra unicamente en mobile, tanto en /propiedades como en el Home
+   ("Propiedades destacadas"), ver el bloque @media (max-width: 767px)
+   de mas abajo (antes tenia un selector de exclusion
+   .properties-grid:not(.properties-grid--featured) que lo dejaba afuera
+   del Home -- se saco para que ambas listas de cards se comporten y se
+   vean igual). pointer-events: none porque es solo informativo, no
+   interactivo -- no debe competir con el Link de la imagen ni con las
+   flechas de .property-image-nav. */
 .property-image-dots {
   position: absolute;
   left: 0;
@@ -242,17 +244,22 @@
 }
 
 @media (max-width: 767px) {
-  .properties-grid:not(.properties-grid--featured) .property-image-nav-btn {
+  /* Antes escopeado a .properties-grid:not(.properties-grid--featured)
+     (solo /propiedades) -- se saca la exclusion para que las flechas de
+     las cards del Home ("Propiedades destacadas") tengan el mismo
+     tamaño de touch target que las de /propiedades. */
+  .property-image-nav-btn {
     width: 44px;   /* antes: 40px */
     height: 44px;  /* antes: 40px */
   }
 
   /* En desktop el hover ya revela las flechas y alcanza como referencia
      de navegacion -- en mobile no hay hover confiable, asi que el
-     indicador de posicion queda siempre visible ahi. Solo /propiedades
-     (properties-grid sin el modificador --featured); el Home
-     ("Propiedades destacadas") no se toca. */
-  .properties-grid:not(.properties-grid--featured) .property-image-dots {
+     indicador de posicion queda siempre visible ahi. Antes esto
+     tambien estaba escopeado solo a /propiedades -- se saca la
+     exclusion para que "Propiedades destacadas" (Home) tenga el mismo
+     indicador. */
+  .property-image-dots {
     display: flex;
   }
 }
