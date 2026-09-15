@@ -26,6 +26,34 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  /* Titulo de la card (.property-content h3): sin cambio de tamano de
+     fuente aca (se mantiene en 18px, el de 12-featured.css) -- eso queda
+     limitado a mobile estricto, ver @media (max-width: 767px) mas abajo.
+     Lo que SI se agrega desde 768px (sin limite superior, asi que cubre
+     tablet 768-1023px Y desktop >=1024px por igual): a partir de aca la
+     grilla ya tiene 2 o 3 columnas (ver el bloque de @media (min-width:
+     1024px) mas abajo), asi que puede haber dos o tres cards en la misma
+     fila con titulos de largo muy distinto -- sin truncar a 2 lineas y
+     sin una altura minima equivalente a esas 2 lineas, esa fila queda con
+     cards de alturas visiblemente distintas. En mobile (1 sola columna,
+     no hay fila que emparejar) se trunca el titulo igual pero sin forzar
+     esta altura minima -- ver el otro bloque. Se decide extender tambien
+     a desktop (no solo a tablet) porque el mismo problema de alturas
+     dispares existe igual con 3 columnas. -webkit-line-clamp tiene
+     soporte amplio en los navegadores actuales (Chrome/Edge/Safari/
+     Firefox 68+); se agrega tambien `line-clamp` sin prefijo para los
+     navegadores mas nuevos que ya no lo necesitan. Solo /propiedades --
+     mismo patron de exclusion que el resto de este archivo; Home no se
+     toca. */
+  .properties-grid:not(.properties-grid--featured) .property-content h3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: calc(1.3em * 2);
+  }
+
   /* Home: "Propiedades destacadas" y "Novedades del mercado
      inmobiliario" (ver .properties-grid--featured en 12-featured.css y
      .blog-grid--preview en 16-blog-preview.css) usan flexbox en vez de
@@ -226,6 +254,31 @@
 
   .property-content {
     padding: var(--space-4);
+  }
+
+  /* Precio y titulo: sin ninguna regla responsive hasta ahora (ver
+     12-featured.css) -- con el padding de card reducido arriba, el ancho
+     de contenido en 320px ronda los 264px, asi que se baja un escalon
+     cada tamano para mantener la jerarquia (precio > titulo > specs a
+     14px) y se trunca el titulo a 2 lineas con ellipsis para que una
+     direccion larga no empuje el resto de la card hacia abajo (no corta
+     a mitad de palabra: overflow-wrap/word-break/hyphens ya vienen del
+     h3 global en 03-typography.css). Sin min-height aca a proposito: en
+     mobile la grilla es de 1 columna, no hay card vecina en la misma fila
+     con la que emparejar alturas (ver el bloque >=768px de mas arriba,
+     donde si aplica). Solo /propiedades, mismo patron de exclusion que el
+     resto de este archivo. */
+  .properties-grid:not(.properties-grid--featured) .property-price {
+    font-size: 20px;
+  }
+
+  .properties-grid:not(.properties-grid--featured) .property-content h3 {
+    font-size: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* Badge "Venta"/"Alquiler": solo en /propiedades (properties-grid sin
