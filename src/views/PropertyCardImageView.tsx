@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent } from 'react';
+import { useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -14,43 +14,69 @@ interface PropertyCardImageViewProps {
   Image: HostImageComponent;
 }
 
-// Mismo `sizes` en la imagen visible y en las precargas ocultas de
-// abajo, para que generen la misma URL optimizada y el navegador
-// reutilice la respuesta ya cacheada al tocar una flecha.
 const CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
 
-// Wrapper "visualmente oculto" para las precargas: 1x1px reales (no
-// 0x0) + clip, para que next/image `fill` tenga una caja con tamaño
-// definido (evita el warning de Next en dev: "has fill and a height
-// value of 0") y siga sin verse ni ocupar espacio en la tarjeta.
-const PRELOAD_WRAPPER_STYLE: CSSProperties = {
-  position: 'absolute',
-  width: 1,
-  height: 1,
-  margin: -1,
-  overflow: 'hidden',
-  clip: 'rect(0,0,0,0)',
-  clipPath: 'inset(50%)',
-  pointerEvents: 'none',
+const SLIDE_STYLE: CSSProperties = {
+  position: 'relative',
+  width: 'calc(100% / 3)',
+  height: '100%',
+  flexShrink: 0,
+  flexGrow: 0,
 };
 
+const AXIS_LOCK_THRESHOLD = 8;
+const SWIPE_THRESHOLD = 45;
+
 /**
- * Navegación de fotos dentro de la tarjeta (flechas prev/next sin
- * salir del listado) — la única parte de `PropertyCardView` que
- * necesita estado, por eso vive en su propio Client Component chico
- * (mismo patrón que `SearchFormView`), en vez de convertir toda la
- * tarjeta en cliente.
+ * Navegación de fotos dentro de la tarjeta (flechas prev/next sin salir
+ * del listado, más swipe táctil) — la única parte de `PropertyCardView`
+ * que necesita estado, por eso vive en su propio Client Component chico
+ * (mismo patrón que `SearchFormView`).
  *
- * Etapa 23 (opcional): en el canvas del admin, las flechas funcionan
- * igual (es JS de verdad, no hace falta el `onClickCapture` del borde
- * del canvas para esto — sólo intercepta que NO navegue de verdad,
- * cosa que este componente ya hace solo con `preventDefault`).
+ * El swipe sólo existe en pantallas táctiles (con mouse/trackpad no se
+ * dispara ningún handler de touch) y convive con las flechas sin
+ * reemplazarlas: las flechas cambian de foto al instante, sin animación;
+ * el swipe arrastra visualmente la foto detrás del dedo y sólo se anima
+ * al soltar.
+ *
+ * Para que el swipe horizontal no quede "peleando" con el scroll
+ * vertical de la lista (el problema reportado — antes sólo se miraba el
+ * gesto completo en `touchend`, sin feedback visual durante el
+ * arrastre, así que un dedo con algo de deriva vertical rompía el
+ * swipe):
+ *  1. `touchAction: 'pan-y'` en el contenedor le dice al navegador que
+ *     el scroll vertical con el dedo lo sigue resolviendo él mismo de
+ *     forma nativa, pero que NO reserve el gesto horizontal para
+ *     scrollear — así un swipe horizontal no compite con la decisión de
+ *     scroll del navegador y responde al instante, sin lag inicial.
+ *  2. En JS, los primeros píxeles de cada toque deciden el eje del
+ *     gesto (`AXIS_LOCK_THRESHOLD`): si domina el vertical, no se toca
+ *     la posición de la tarjeta y se deja que el scroll nativo (punto
+ *     1) haga lo suyo; si domina el horizontal, recién ahí la tarjeta
+ *     empieza a seguir al dedo 1 a 1 (`dragX`).
+ * Nunca se llama a `preventDefault`, así el listener queda pasivo (sin
+ * warnings de React) y el scroll de la página nunca se bloquea.
+ *
+ * Implementación del arrastre: un "track" flex de 3 fotos (anterior /
+ * actual / siguiente, cada una 1/3 del ancho del track) que se traduce
+ * con `translateX`. En reposo muestra la del medio; mientras se arrastra,
+ * `dragX` (px) se suma a esa posición para que siga al dedo sin demora.
+ * Al soltar: si el gesto superó `SWIPE_THRESHOLD`, se anima el resto del
+ * camino hasta el borde (con transición CSS, activada sólo en ese
+ * momento vía `isAnimating`) y al terminar la animación (`onTransitionEnd`)
+ * recién ahí cambia el `index` y la posición vuelve al centro sin
+ * transición — la foto del borde que se ve en ese instante es la misma
+ * que pasa a ser la del centro, así que el cambio es invisible (el
+ * truco clásico del carrusel infinito). Si no superó el umbral, se anima
+ * de vuelta al centro sin cambiar de foto.
  */
 export function PropertyCardImageView({ images, title, href, badgeClass, badgeLabel, Link, Image }: PropertyCardImageViewProps) {
   const [index, setIndex] = useState(0);
   const hasMultipleImages = images.length > 1;
   const total = images.length;
   const currentImage = images[index] ?? images[0] ?? '/images/property-placeholder.svg';
+  const prevImage = hasMultipleImages ? images[(index - 1 + total) % total] : currentImage;
+  const nextImage = hasMultipleImages ? images[(index + 1) % total] : currentImage;
 
   function goPrev(e: MouseEvent) {
     e.preventDefault();
@@ -64,52 +90,83 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     setIndex((i) => (i + 1) % total);
   }
 
-  // Swipe horizontal en touch, ADICIONAL a las flechas (que siguen
-  // intactas para teclado/switch/mouse) — mismo criterio que se repite
-  // en PropertyGallery.tsx (Capa 4): sólo lee posiciones de touch, nunca
-  // llama preventDefault, así el listener queda pasivo por defecto y el
-  // scroll vertical de la página nunca se bloquea. Sólo se interpreta
-  // como swipe si el desplazamiento horizontal domina claramente sobre
-  // el vertical y supera un umbral mínimo, para no dispararse por error
-  // durante un scroll normal de la lista.
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const SWIPE_THRESHOLD = 45;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const touchRef = useRef<{ x: number; y: number; axis: 'x' | 'y' | null } | null>(null);
+  const pendingDirRef = useRef<0 | 1 | -1>(0);
+  const [dragX, setDragX] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   function handleTouchStart(e: TouchEvent) {
+    if (!hasMultipleImages) return;
     const t = e.touches[0];
     if (!t) return;
-    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    touchRef.current = { x: t.clientX, y: t.clientY, axis: null };
+    pendingDirRef.current = 0;
+    setIsAnimating(false);
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    const state = touchRef.current;
+    const t = e.touches[0];
+    if (!state || !t) return;
+    const deltaX = t.clientX - state.x;
+    const deltaY = t.clientY - state.y;
+    if (state.axis === null) {
+      if (Math.abs(deltaX) < AXIS_LOCK_THRESHOLD && Math.abs(deltaY) < AXIS_LOCK_THRESHOLD) return;
+      state.axis = Math.abs(deltaX) > Math.abs(deltaY) ? 'x' : 'y';
+    }
+    if (state.axis !== 'x') return;
+    setDragX(deltaX);
   }
 
   function handleTouchEnd(e: TouchEvent) {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    if (!start || !hasMultipleImages) return;
+    const state = touchRef.current;
+    touchRef.current = null;
+    if (!state || state.axis !== 'x') {
+      setDragX(0);
+      return;
+    }
     const t = e.changedTouches[0];
-    if (!t) return;
-    const deltaX = t.clientX - start.x;
-    const deltaY = t.clientY - start.y;
-    if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-    if (deltaX < 0) {
-      setIndex((i) => (i + 1) % total);
+    const deltaX = t ? t.clientX - state.x : 0;
+    setIsAnimating(true);
+    if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
+      const width = containerRef.current?.offsetWidth ?? 0;
+      if (deltaX < 0) {
+        pendingDirRef.current = 1;
+        setDragX(-width);
+      } else {
+        pendingDirRef.current = -1;
+        setDragX(width);
+      }
     } else {
-      setIndex((i) => (i - 1 + total) % total);
+      pendingDirRef.current = 0;
+      setDragX(0);
     }
   }
 
-  // Precarga la foto anterior y la siguiente a la actual — sin esto,
-  // la primera vez que se toca una flecha se nota el arranque de la
-  // descarga. Con varias tarjetas en el listado, cada una precarga
-  // sólo sus dos vecinas (no toda la galería), así que el costo extra
-  // de red es mínimo.
-  const prevImage = hasMultipleImages ? images[(index - 1 + total) % total] : null;
-  const nextImage = hasMultipleImages ? images[(index + 1) % total] : null;
+  function handleTrackTransitionEnd(e: TransitionEvent<HTMLDivElement>) {
+    if (e.propertyName !== 'transform') return;
+    const dir = pendingDirRef.current;
+    pendingDirRef.current = 0;
+    if (dir !== 0) {
+      setIndex((i) => (dir === 1 ? (i + 1) % total : (i - 1 + total) % total));
+    }
+    setDragX(0);
+    setIsAnimating(false);
+  }
 
   return (
     <div
+      ref={containerRef}
       className="property-image"
-      style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}
+      style={{
+        position: 'relative',
+        aspectRatio: '16/9',
+        overflow: 'hidden',
+        touchAction: hasMultipleImages ? 'pan-y' : undefined,
+      }}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
@@ -117,24 +174,35 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
         href={href}
         className="property-image-link"
         aria-label={`Ver detalles de ${title}`}
-        style={{ position: 'relative', display: 'block', width: '100%', height: '100%' }}
+        style={{ position: 'relative', display: 'block', width: '100%', height: '100%', overflow: 'hidden' }}
       >
-        <Image src={currentImage} alt={title} fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} />
+        {hasMultipleImages ? (
+          <div
+            className="property-image-track"
+            onTransitionEnd={handleTrackTransitionEnd}
+            style={{
+              display: 'flex',
+              width: '300%',
+              height: '100%',
+              transform: `translateX(calc(-100% / 3 + ${dragX}px))`,
+              transition: isAnimating ? 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+              willChange: 'transform',
+            }}
+          >
+            <div style={SLIDE_STYLE} aria-hidden="true">
+              <Image src={prevImage} alt="" fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} loading="eager" />
+            </div>
+            <div style={SLIDE_STYLE}>
+              <Image src={currentImage} alt={title} fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} />
+            </div>
+            <div style={SLIDE_STYLE} aria-hidden="true">
+              <Image src={nextImage} alt="" fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} loading="eager" />
+            </div>
+          </div>
+        ) : (
+          <Image src={currentImage} alt={title} fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} />
+        )}
       </Link>
-
-      {/* Precargas invisibles (0x0, fuera de flujo): no se ven, sólo
-          calientan la caché para que las flechas de la tarjeta se
-          sientan instantáneas. */}
-      {prevImage && prevImage !== currentImage && (
-        <div aria-hidden="true" style={PRELOAD_WRAPPER_STYLE}>
-          <Image src={prevImage} alt="" fill sizes={CARD_IMAGE_SIZES} loading="eager" />
-        </div>
-      )}
-      {nextImage && nextImage !== currentImage && nextImage !== prevImage && (
-        <div aria-hidden="true" style={PRELOAD_WRAPPER_STYLE}>
-          <Image src={nextImage} alt="" fill sizes={CARD_IMAGE_SIZES} loading="eager" />
-        </div>
-      )}
 
       {hasMultipleImages && (
         <div className="property-image-nav">
