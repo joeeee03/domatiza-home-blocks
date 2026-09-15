@@ -294,8 +294,54 @@
   }
 }
 
-/* Extra small screens (320px). Placed AFTER the general mobile block on
-   purpose so these overrides actually win the cascade at ≤374px widths. */
+/* Zona intermedia (361-480px) — cubre la gran mayoria de telefonos reales
+   en uso (iPhone SE/12/13 mini 375, iPhone 12/13/14 390, Android de gama
+   media/alta 360-412, iPhone Pro Max 428-430) que hasta ahora quedaba sin
+   ningun ajuste: `.property-specs` se mantenia en fila con el gap de
+   escritorio (var(--space-4) = 16px, heredado de 12-featured.css) desde
+   767px hasta aca, y recien pasaba a columna en @media (max-width: 374px)
+   (ver mas abajo) -- dejando este rango con el mismo gap de 16px pese al
+   ancho de card mucho menor.
+
+   Con hasta 3 specs ("120 m²" + "3 amb" + "2 dorm"), cada uno con icono de
+   16px + gap interno var(--space-1)=4px + texto de 14px, el ancho
+   combinado de los 3 textos+iconos ronda 210-230px. El ancho de contenido
+   disponible en este rango (descontando .container y el padding de
+   .property-content, ambos en su valor de mobile) ronda 300-370px, asi
+   que en teoria entran -- pero con el gap de 16px entre cada spec (32px
+   repartidos en 2 gaps) el total se acerca lo suficiente al limite como
+   para que, con specs un poco mas largos que el caso tipico (numeros de
+   mas digitos, "ha" en vez de "m²", etc.), el wrap natural de
+   flex-wrap:wrap deje al tercer item solo en una segunda linea -- un
+   wrap "desprolijo", no una columna intencional.
+
+   Se achica unicamente el gap (a var(--space-2) = 8px, la mitad) sin
+   tocar flex-direction: con solo 16px repartidos en los mismos 2 gaps
+   (en vez de 32px) los 3 specs quedan comodos en una sola fila con
+   margen de sobra, incluso en el extremo angosto de este rango (~300px
+   de ancho de contenido). Arranca en 361px porque el extremo inferior
+   (≤360px) sigue resolviendose forzando la columna completa, mas abajo
+   en este archivo -- ver ese bloque para el porque de ese breakpoint
+   puntual.
+
+   `.property-specs` es una clase compartida entre el Home ("Propiedades
+   destacadas", via PropertyCardView.tsx en el paquete home-blocks) y
+   /propiedades (PropertyCard.tsx) sin ningun selector de exclusion --
+   la regla base en 12-featured.css tampoco la lleva -- asi que esta
+   regla nueva sigue el mismo patron: sin
+   :not(.properties-grid--featured), el ajuste debe verse igual en
+   ambos lugares. */
+@media (min-width: 361px) and (max-width: 480px) {
+  .property-specs {
+    gap: var(--space-2);
+  }
+}
+
+/* Extra small screens (320-360px). Placed AFTER the general mobile block
+   and after the 361-480px block above on purpose so these overrides
+   actually win the cascade at ≤374px widths (≤360px para
+   `.property-specs` en particular, ver su propio bloque dedicado mas
+   abajo). */
 @media (max-width: 374px) {
   .container {
     padding: 0 var(--space-3);
@@ -346,17 +392,36 @@
     left: var(--space-2);
   }
 
-  .property-specs {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
   .property-actions {
     flex-direction: column;
   }
 
   .property-actions .btn {
     width: 100%;
+  }
+}
+
+/* `.property-specs` en columna: antes vivia adentro del bloque de arriba
+   (@media max-width: 374px), junto con el resto de los ajustes "extra
+   small". Se le da su propio breakpoint, mas angosto (≤360px en vez de
+   ≤374px), porque medido el ancho de contenido real disponible en
+   361-374px (~305-315px, ver el bloque de 361-480px de mas arriba) los
+   3 specs entran comodos en una sola fila con el gap ya reducido a
+   var(--space-2) -- forzar la columna ahi era mas conservador de lo que
+   el espacio disponible requiere. Se deja la columna forzada solo para
+   el tramo realmente extremo (≤360px, ej. iPhone 5/SE de 1ra gen a
+   320px), donde el margen se achica lo suficiente como para no
+   arriesgarse con specs mas largos que el caso tipico. El resto de los
+   ajustes de la version original de "extra small" (container, h1/h2,
+   hero, badge, property-actions, etc.) se quedan sin cambios en su
+   breakpoint original de 374px, en el bloque de arriba -- solo se movio
+   esta regla puntual. Sin :not(.properties-grid--featured) por el mismo
+   motivo que el bloque de 361-480px: `.property-specs` es compartida
+   entre Home y /propiedades sin exclusion. */
+@media (max-width: 360px) {
+  .property-specs {
+    flex-direction: column;
+    gap: var(--space-2);
   }
 }
 
