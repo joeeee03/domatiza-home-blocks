@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent as ReactTouchEvent, type TransitionEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -57,8 +57,10 @@ const SLIDE_BASE_STYLE: CSSProperties = {
  *     la posición de la tarjeta y se deja que el scroll nativo (punto
  *     1) haga lo suyo; si domina el horizontal, recién ahí la tarjeta
  *     empieza a seguir al dedo 1 a 1 (`dragX`).
- * Nunca se llama a `preventDefault`, así el listener queda pasivo (sin
- * warnings de React) y el scroll de la página nunca se bloquea.
+ * Sólo se llama a `preventDefault` cuando el eje ya quedó confirmado
+ * como horizontal (ver BUGFIX v5 más abajo) — mientras el gesto sigue
+ * siendo vertical o todavía no se decidió, el listener no interfiere y
+ * el scroll de la página nunca se bloquea.
  *
  * Implementación del arrastre: un "track" flex de 3 fotos (anterior /
  * actual / siguiente, cada una 1/3 del ancho del track) que se traduce
@@ -114,6 +116,35 @@ const SLIDE_BASE_STYLE: CSSProperties = {
  *     commit pendiente (`commitDir !== 0`) apenas entra un dedo nuevo,
  *     antes de arrancar el nuevo gesto — así nunca queda un swipe a
  *     medio resolver, sin importar cuán rápido se encadenen.
+ *
+ * BUGFIX (Sep 2026, v5) — "a veces, al deslizar el carrusel, se mueve
+ * la página en vertical en vez de cambiar de foto": `touchAction:
+ * 'pan-y'` (punto 1 más arriba) es sólo una PISTA para el navegador,
+ * no una garantía. El navegador decide si el gesto es un scroll
+ * vertical mirando los primerísimos píxeles del touchmove — una
+ * decisión que corre en paralelo a nuestro propio AXIS_LOCK_THRESHOLD
+ * en JS, y ambos no siempre coinciden: un swipe horizontal real casi
+ * nunca es 100% horizontal desde el primer píxel (el dedo tiene una
+ * mínima deriva vertical), y si esa deriva inicial es la que el
+ * navegador alcanza a leer primero, se queda con el gesto como scroll
+ * vertical antes de que nuestro JS termine de decidir que en realidad
+ * es horizontal.
+ *
+ * La única forma de ganarle esa carrera es cancelar explícitamente el
+ * scroll nativo (`preventDefault()`) apenas nuestro JS confirma que el
+ * eje es horizontal. El problema: React marca como PASIVO por default
+ * cualquier `onTouchMove` agregado vía JSX (para no trabar el scroll
+ * normal de la página en el caso general), y en un listener pasivo
+ * `preventDefault()` no hace nada — el navegador lo ignora en
+ * silencio, sin ni siquiera un error. Por eso, aunque nada en el
+ * código anterior lo impedía activamente, tampoco lo lograba de
+ * verdad.
+ *
+ * La solución: registrar el touchmove A MANO con `addEventListener` y
+ * `{ passive: false }` (ver el `useLayoutEffect` más abajo, en vez del
+ * prop `onTouchMove` de React), que es la única forma de que
+ * `preventDefault()` tenga efecto real. `touchstart`/`touchend` se
+ * dejan como estaban (vía JSX): ahí no hace falta cancelar nada.
  */
 export function PropertyCardImageView({ images, title, href, badgeClass, badgeLabel, Link, Image }: PropertyCardImageViewProps) {
   const [index, setIndex] = useState(0);
@@ -155,12 +186,17 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     return () => observer.disconnect();
   }, [hasMultipleImages]);
 
+  // Se llena más abajo, luego de definir handleTouchMove — declarado acá
+  // arriba para que el useLayoutEffect que registra el listener nativo
+  // (ver BUGFIX v5) pueda ir antes en el archivo sin problema de orden.
+  const handleTouchMoveRef = useRef<(e: TouchEvent) => void>(() => {});
+
   const touchRef = useRef<{ x: number; y: number; time: number; axis: 'x' | 'y' | null } | null>(null);
   const [dragX, setDragX] = useState(0);
   const [commitDir, setCommitDir] = useState<0 | 1 | -1>(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  function handleTouchStart(e: TouchEvent) {
+  function handleTouchStart(e: ReactTouchEvent) {
     if (!hasMultipleImages) return;
     const t = e.touches[0];
     if (!t) return;
@@ -189,10 +225,37 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
       state.axis = Math.abs(deltaX) > Math.abs(deltaY) ? 'x' : 'y';
     }
     if (state.axis !== 'x') return;
+    // BUGFIX v5: recién acá, con el eje ya confirmado como horizontal,
+    // cancelamos el scroll vertical que el navegador pudo haber
+    // empezado a considerar con este mismo gesto. Sólo tiene efecto
+    // real porque este handler se conecta más abajo vía
+    // addEventListener(..., { passive: false }) — con el prop
+    // `onTouchMove` de React (pasivo por default) esta línea sería un
+    // no-op silencioso.
+    e.preventDefault();
     setDragX(deltaX);
   }
+  // Siempre la versión más nueva de la función (con el `index`, `total`,
+  // etc. del render actual) disponible para el listener nativo de abajo,
+  // sin tener que reconectar ese listener en cada render.
+  handleTouchMoveRef.current = handleTouchMove;
 
-  function handleTouchEnd(e: TouchEvent) {
+  // BUGFIX v5 (ver el comentario grande sobre el componente): registrado
+  // a mano porque es la ÚNICA forma de que `preventDefault()` dentro de
+  // `handleTouchMove` tenga efecto — el prop `onTouchMove` de React lo
+  // agrega como listener pasivo por default, y ahí el navegador ignora
+  // `preventDefault()` en silencio. `touchstart`/`touchend` no lo
+  // necesitan y se quedan con el prop normal de React, más abajo en el
+  // JSX.
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el || !hasMultipleImages) return;
+    const listener = (e: TouchEvent) => handleTouchMoveRef.current(e);
+    el.addEventListener('touchmove', listener, { passive: false });
+    return () => el.removeEventListener('touchmove', listener);
+  }, [hasMultipleImages]);
+
+  function handleTouchEnd(e: ReactTouchEvent) {
     const state = touchRef.current;
     touchRef.current = null;
     if (!state || state.axis !== 'x') {
@@ -260,7 +323,6 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
         touchAction: hasMultipleImages ? 'pan-y' : undefined,
       }}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
