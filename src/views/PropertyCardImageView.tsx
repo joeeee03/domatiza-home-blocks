@@ -17,7 +17,11 @@ interface PropertyCardImageViewProps {
 const CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
 
 const AXIS_LOCK_THRESHOLD = 8;
-const SWIPE_THRESHOLD = 45;
+const SWIPE_DISTANCE_THRESHOLD = 40;
+const SWIPE_VELOCITY_THRESHOLD = 0.5; // px/ms — flick corto y rápido, aunque no llegue a la distancia mínima
+const MIN_FLICK_DISTANCE = 12; // evita que un toque tembloroso/tap cuente como flick por velocidad
+const TRANSITION_MS = 190;
+const TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 const SLIDE_BASE_STYLE: CSSProperties = {
   position: 'relative',
@@ -84,15 +88,32 @@ const SLIDE_BASE_STYLE: CSSProperties = {
  * todavía no se midió (primer render antes de que corra el efecto) se
  * usa el porcentaje como respaldo, para no dejar la foto en 0px.
  *
- * Al soltar: si el gesto superó `SWIPE_THRESHOLD`, se anima el resto del
- * camino hasta el borde (con transición CSS, activada sólo en ese
- * momento vía `isAnimating`) y al terminar la animación
- * (`onTransitionEnd`) recién ahí cambia el `index`, `commitDir` vuelve a
- * 0 y la posición vuelve al centro sin transición — la foto del borde
- * que se ve en ese instante es la misma que pasa a ser la del centro,
- * así que el cambio es invisible (el truco clásico del carrusel
- * infinito). Si no superó el umbral, se anima de vuelta al centro sin
- * cambiar de foto.
+ * Al soltar: si el gesto superó el umbral (distancia o velocidad, ver
+ * BUGFIX v3), se anima el resto del camino hasta el borde (con
+ * transición CSS, activada sólo en ese momento vía `isAnimating`) y al
+ * terminar la animación (`onTransitionEnd`) recién ahí cambia el
+ * `index`, `commitDir` vuelve a 0 y la posición vuelve al centro sin
+ * transición — la foto del borde que se ve en ese instante es la misma
+ * que pasa a ser la del centro, así que el cambio es invisible (el
+ * truco clásico del carrusel infinito). Si no superó el umbral, se
+ * anima de vuelta al centro sin cambiar de foto.
+ *
+ * BUGFIX (Sep 2026, v3) — dos problemas reportados:
+ *  a) "Cambia muy lento": la transición bajó de 280ms a 190ms y ahora
+ *     además hay un umbral por VELOCIDAD (`SWIPE_VELOCITY_THRESHOLD`),
+ *     no sólo por distancia — un flick corto y rápido (como en apps
+ *     nativas) también cambia de foto, no hace falta arrastrar 45px.
+ *  b) "Si deslizo muy rápido a veces no funciona": pasaba cuando un
+ *     segundo swipe empezaba ANTES de que terminara la animación de
+ *     "commit" del primero. Al cortar la transición a mano
+ *     (`isAnimating -> false`) el navegador NO dispara `transitionend`
+ *     (sólo se dispara si la transición llega a destino), que era el
+ *     único lugar donde se actualizaba `index`. Resultado: el índice
+ *     quedaba pegado y el próximo gesto arrancaba desde una posición
+ *     inconsistente. Ahora `handleTouchStart` resuelve a mano cualquier
+ *     commit pendiente (`commitDir !== 0`) apenas entra un dedo nuevo,
+ *     antes de arrancar el nuevo gesto — así nunca queda un swipe a
+ *     medio resolver, sin importar cuán rápido se encadenen.
  */
 export function PropertyCardImageView({ images, title, href, badgeClass, badgeLabel, Link, Image }: PropertyCardImageViewProps) {
   const [index, setIndex] = useState(0);
@@ -134,7 +155,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     return () => observer.disconnect();
   }, [hasMultipleImages]);
 
-  const touchRef = useRef<{ x: number; y: number; axis: 'x' | 'y' | null } | null>(null);
+  const touchRef = useRef<{ x: number; y: number; time: number; axis: 'x' | 'y' | null } | null>(null);
   const [dragX, setDragX] = useState(0);
   const [commitDir, setCommitDir] = useState<0 | 1 | -1>(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -143,8 +164,18 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     if (!hasMultipleImages) return;
     const t = e.touches[0];
     if (!t) return;
-    touchRef.current = { x: t.clientX, y: t.clientY, axis: null };
+    // Ver BUGFIX v3: si entra un dedo nuevo mientras todavía había un
+    // commit pendiente de resolverse (swipes encadenados muy rápido),
+    // lo resolvemos ya mismo en vez de dejarlo colgado — cortar la
+    // transición a mano no dispara `transitionend`, así que sin esto el
+    // índice se queda pegado.
+    if (commitDir !== 0) {
+      setIndex((i) => (commitDir === 1 ? (i + 1) % total : (i - 1 + total) % total));
+      setCommitDir(0);
+    }
+    touchRef.current = { x: t.clientX, y: t.clientY, time: e.timeStamp, axis: null };
     setIsAnimating(false);
+    setDragX(0);
   }
 
   function handleTouchMove(e: TouchEvent) {
@@ -170,8 +201,16 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     }
     const t = e.changedTouches[0];
     const deltaX = t ? t.clientX - state.x : 0;
+    // Umbral doble (BUGFIX v3): por distancia (arrastre largo, clásico) o
+    // por velocidad (flick corto y rápido, como en apps nativas) — así un
+    // deslizón veloz pero corto también cambia de foto.
+    const elapsedMs = Math.max(1, e.timeStamp - state.time);
+    const velocity = Math.abs(deltaX) / elapsedMs;
+    const isSwipe =
+      Math.abs(deltaX) >= SWIPE_DISTANCE_THRESHOLD ||
+      (Math.abs(deltaX) >= MIN_FLICK_DISTANCE && velocity >= SWIPE_VELOCITY_THRESHOLD);
     setIsAnimating(true);
-    if (Math.abs(deltaX) >= SWIPE_THRESHOLD) {
+    if (isSwipe) {
       setCommitDir(deltaX < 0 ? 1 : -1);
     }
     setDragX(0);
@@ -240,7 +279,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
               width: trackWidthStyle,
               height: '100%',
               transform: trackTransform,
-              transition: isAnimating ? 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none',
+              transition: isAnimating ? `transform ${TRANSITION_MS}ms ${TRANSITION_EASING}` : 'none',
               willChange: 'transform',
             }}
           >
