@@ -292,6 +292,70 @@
     top: var(--space-3);
     left: var(--space-3);
   }
+
+  /* .property-actions en mobile: "Ver más" (.btn-secondary) + WhatsApp
+     (.btn-whatsapp, solo icono -- <MessageCircle size={18}>, sin texto).
+
+     Especificidad real hoy (por que .property-actions .btn gana el ancho
+     pero pierde el alto frente a 05-buttons.css):
+       .btn-whatsapp, .btn-secondary { min-width:200px; height:50px; }
+         -> selector de 1 clase = (0,1,0)
+       .property-actions .btn { flex:1; min-width:0; }
+         -> selector de 2 clases = (0,2,0), le gana a (0,1,0)
+     Resultado: min-width:0 (de .property-actions .btn) gana sobre
+     min-width:200px (de 05-buttons.css) porque (0,2,0) > (0,1,0) -- por
+     eso flex:1 reparte el ancho libremente entre los dos botones, 50/50.
+     height:50px, en cambio, no tiene ninguna regla en competencia
+     declarando `height` en .property-actions .btn, asi que sigue
+     ganando igual (no es una cuestion de especificidad, es que nadie mas
+     la disputa) y ambos botones miden 50px de alto sin importar el ancho.
+     Con ancho de contenido de card ~264-326px en mobile, 50/50 dan
+     ~125-160px por boton: el icono de WhatsApp (18px) queda solo en el
+     centro de una caja mucho mas ancha que su contenido.
+
+     Reemplazo: "Ver más" pasa a flex:1 (crece para ocupar el espacio
+     sobrante) y WhatsApp pasa a un cuadrado fijo de 44px de lado (piso
+     tactil recomendado), circular, sin el min-width:200px/ancho variable
+     de antes. Las 3 reglas de abajo usan
+     .properties-grid:not(.properties-grid--featured) .property-actions
+     [...] -- 3 o 4 clases en la cadena, (0,3,0) o (0,4,0) segun la
+     regla -- especificidad mayor que .property-actions{flex-direction:
+     column} (0,1,0) y .property-actions .btn{width:100%} (0,2,0), las
+     dos reglas que fuerzan columna en @media (max-width:374px) mas abajo
+     en este archivo. Por eso estas reglas nuevas GANAN ahi tambien sin
+     necesidad de tocar ni borrar ese bloque de 374px: la fila se
+     mantiene horizontal en todo el rango ≤767px para /propiedades,
+     mientras que el Home ("Propiedades destacadas", fuera del selector
+     de exclusion) sigue exactamente igual que antes -- columna a partir
+     de 374px, 50/50 en el resto -- sin ningun cambio de codigo para el.
+
+     flex:1 en .btn-secondary fija flex-basis:0%, asi que el width:100%
+     que le llegaria heredado del bloque de 374px no tiene efecto (en un
+     item flex, flex-basis manda sobre width en el eje principal); mismo
+     motivo por el que .btn-whatsapp no necesita pelear por `width`,
+     alcanza con flex:0 0 44px. min-width:44px en .btn-whatsapp es
+     ademas una red de seguridad: como flex-shrink es 0 no deberia
+     necesitarse, pero evita cualquier achique si alguna regla futura le
+     agrega flex-shrink. */
+  .properties-grid:not(.properties-grid--featured) .property-actions {
+    flex-direction: row;
+  }
+
+  .properties-grid:not(.properties-grid--featured) .property-actions .btn {
+    height: 44px;
+  }
+
+  .properties-grid:not(.properties-grid--featured) .property-actions .btn-secondary {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .properties-grid:not(.properties-grid--featured) .property-actions .btn-whatsapp {
+    flex: 0 0 44px;
+    min-width: 44px;
+    padding: 0;
+    border-radius: 50%;
+  }
 }
 
 /* Zona intermedia (361-480px) — cubre la gran mayoria de telefonos reales
