@@ -19,6 +19,13 @@ const CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33
 const AXIS_LOCK_THRESHOLD = 8;
 const SWIPE_THRESHOLD = 45;
 
+const SLIDE_STYLE: CSSProperties = {
+  flex: '0 0 33.333%',
+  position: 'relative',
+  width: '33.333%',
+  height: '100%',
+};
+
 /**
  * Navegación de fotos dentro de la tarjeta (flechas prev/next sin salir
  * del listado, más swipe táctil) — la única parte de `PropertyCardView`
