@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent, type TransitionEvent } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -15,14 +15,6 @@ interface PropertyCardImageViewProps {
 }
 
 const CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
-
-const SLIDE_STYLE: CSSProperties = {
-  position: 'relative',
-  width: 'calc(100% / 3)',
-  height: '100%',
-  flexShrink: 0,
-  flexGrow: 0,
-};
 
 const AXIS_LOCK_THRESHOLD = 8;
 const SWIPE_THRESHOLD = 45;
