@@ -73,7 +73,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 300ms ease, opacity 200ms ease;
+  transition: opacity 200ms ease;
 }
 
 .property-image-nav {
@@ -171,9 +171,19 @@
   transform: scale(1.3);
 }
 
-.property-card:hover .property-image-link img {
-  transform: scale(1.04);
-}
+/* BUGFIX (Sep 2026, v3): esta regla escalaba TODAS las <img> dentro de
+   .property-image-link con el mouse encima de la tarjeta (`hover`) --
+   no sólo la foto visible, sino también las de "anterior" y "siguiente"
+   que arma PropertyCardImage.tsx/PropertyCardImageView.tsx para el
+   swipe (fuera de pantalla, a los costados). Cada foto vive en su
+   propia franja de 1/3 sin overflow:hidden propio (sólo el contenedor
+   grande de más arriba lo tiene) -- al agrandarla 4% desde su centro
+   sobresale de esa franja, y como la franja "siguiente" está pegada
+   literalmente al borde derecho del área visible, ese sobrante entra
+   al recuadro visible como una tira de la foto de al lado. Se ve en
+   touch también porque algunos navegadores mobile mantienen el estado
+   :hover pegado tras un toque. Se saca el zoom entero -- sin animación
+   en la foto al pasar el mouse. */
 
 .property-badge {
   position: absolute;
