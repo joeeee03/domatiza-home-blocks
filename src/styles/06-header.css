@@ -716,10 +716,13 @@ body.mobile-menu-open .header .logo-text {
 }
 
 @media (max-width: 767px) {
+  /* El panel arranca justo donde termina el header. `--header-h-mobile`
+     (01-variables.css) es el único lugar donde se define ese alto —
+     ver también `26-chrome-responsive.css`. */
   .mobile-menu {
-    top: 56px;
-    max-height: calc(100vh - 56px);
-    max-height: calc(100dvh - 56px);
+    top: var(--header-h-mobile);
+    max-height: calc(100vh - var(--header-h-mobile));
+    max-height: calc(100dvh - var(--header-h-mobile));
   }
 }
 
