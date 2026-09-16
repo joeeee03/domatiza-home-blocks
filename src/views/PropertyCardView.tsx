@@ -14,22 +14,47 @@ export interface PropertyCardViewData {
   priceLabel: string;
   /** Ya formateado — ej. "120 m²" / "3 ha". */
   surfaceLabel: string;
-  /** `null` = el tipo de propiedad no usa este campo (ver Ambientes/Dormitorios en la especificación de tipos) — no se renderiza el span, en vez de mostrar "0 amb". Quién decide null vs. número es el contenedor, esta vista solo confía en lo que le pasan. */
+  /** `null` = el tipo de propiedad no usa este campo — no se renderiza el span, en vez de mostrar "0 amb". */
   rooms: number | null;
   bedrooms: number | null;
-  /** `agent.whatsapp ?? agent.phone`, ya resuelto. `undefined` = sin botón de WhatsApp visible en la tarjeta (no debería pasar en la práctica, pero la vista no asume que siempre hay). */
+  /** `agent.whatsapp ?? agent.phone`, ya resuelto. `undefined` = sin botón de WhatsApp visible. */
   whatsappNumber: string | undefined;
 }
 
 export interface PropertyCardViewProps {
   property: PropertyCardViewData;
-  /** Posición dentro de su grilla (0-based) — sólo para el `transitionDelay` del fade-in, ver `PropertyCardRevealView.tsx`. */
+  /** Posición dentro de su grilla (0-based) — para el `transitionDelay` del fade-in y para decidir la prioridad de carga de la foto. */
   index?: number;
   Link: HostLinkComponent;
   Image: HostImageComponent;
+  /**
+   * REVISIÓN DE PERFORMANCE: cuántas tarjetas de la grilla cargan su
+   * foto con prioridad alta (preload) en vez de lazy loading.
+   *
+   * Depende de DÓNDE se monta la grilla, y por eso es un prop y no una
+   * constante:
+   *
+   *   - En el HOME ("Propiedades destacadas") el valor correcto es 0.
+   *     Esa sección está bien abajo del pliegue: el LCP del Home es la
+   *     foto del hero, y marcar las destacadas como prioritarias las
+   *     pondría a competir contra ella, empeorando justo la métrica que
+   *     se quiere mejorar.
+   *
+   *   - En un listado donde las tarjetas SON lo primero que se ve
+   *     (/propiedades), el valor correcto es 2 o 3.
+   *
+   * Default 0 = el comportamiento seguro (nada prioritario).
+   */
+  priorityCards?: number;
 }
 
-export function PropertyCardView({ property, index = 0, Link, Image }: PropertyCardViewProps) {
+export function PropertyCardView({
+  property,
+  index = 0,
+  Link,
+  Image,
+  priorityCards = 0,
+}: PropertyCardViewProps) {
   const badgeClass = property.operation === 'venta' ? 'badge-sale' : 'badge-rent';
   const badgeLabel = property.operation === 'venta' ? 'Venta' : 'Alquiler';
   const waMessage = `Hola, quiero más información sobre "${property.title}"`;
@@ -45,6 +70,7 @@ export function PropertyCardView({ property, index = 0, Link, Image }: PropertyC
         badgeLabel={badgeLabel}
         Link={Link}
         Image={Image}
+        priority={index < priorityCards}
       />
       <div className="property-content">
         <div className="property-price">{property.priceLabel}</div>

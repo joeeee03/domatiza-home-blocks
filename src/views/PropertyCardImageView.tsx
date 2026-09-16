@@ -1,6 +1,15 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent, type TouchEvent as ReactTouchEvent, type TransitionEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+  type TouchEvent as ReactTouchEvent,
+  type TransitionEvent,
+} from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 
@@ -12,14 +21,31 @@ interface PropertyCardImageViewProps {
   badgeLabel: string;
   Link: HostLinkComponent;
   Image: HostImageComponent;
+  /**
+   * Sólo para la(s) primera(s) tarjeta(s) de una grilla arriba del
+   * pliegue: precarga la foto con prioridad alta en vez de dejarla al
+   * lazy loading. Lo decide el contenedor, que es el único que sabe la
+   * posición. Ver `PropertyCardView`.
+   */
+  priority?: boolean;
 }
 
 const CARD_IMAGE_SIZES = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw';
 
+/**
+ * A 400-500px de ancho (lo que mide una tarjeta), 70 es visualmente
+ * indistinguible de 75 y pesa ~15-20% menos por foto. Tiene que estar
+ * declarada en `images.qualities` de `next.config.ts` del consumidor.
+ */
+const CARD_IMAGE_QUALITY = 70;
+
+/** Cuánto esperar, en reposo, antes de montar las fotos vecinas. */
+const NEIGHBOR_PRELOAD_DELAY_MS = 1200;
+
 const AXIS_LOCK_THRESHOLD = 8;
 const SWIPE_DISTANCE_THRESHOLD = 40;
-const SWIPE_VELOCITY_THRESHOLD = 0.5; // px/ms — flick corto y rápido, aunque no llegue a la distancia mínima
-const MIN_FLICK_DISTANCE = 12; // evita que un toque tembloroso/tap cuente como flick por velocidad
+const SWIPE_VELOCITY_THRESHOLD = 0.5; // px/ms — flick corto y rápido
+const MIN_FLICK_DISTANCE = 12; // evita que un tap tembloroso cuente como flick
 const TRANSITION_MS = 190;
 const TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -33,120 +59,61 @@ const SLIDE_BASE_STYLE: CSSProperties = {
 /**
  * Navegación de fotos dentro de la tarjeta (flechas prev/next sin salir
  * del listado, más swipe táctil) — la única parte de `PropertyCardView`
- * que necesita estado, por eso vive en su propio Client Component chico
- * (mismo patrón que `SearchFormView`).
+ * que necesita estado, por eso vive en su propio Client Component.
  *
- * El swipe sólo existe en pantallas táctiles (con mouse/trackpad no se
- * dispara ningún handler de touch) y convive con las flechas sin
- * reemplazarlas: las flechas cambian de foto al instante, sin animación;
- * el swipe arrastra visualmente la foto detrás del dedo y sólo se anima
- * al soltar.
+ * ── REVISIÓN DE PERFORMANCE: las fotos vecinas ya no van "eager" ────
  *
- * Para que el swipe horizontal no quede "peleando" con el scroll
- * vertical de la lista (el problema reportado — antes sólo se miraba el
- * gesto completo en `touchend`, sin feedback visual durante el
- * arrastre, así que un dedo con algo de deriva vertical rompía el
- * swipe):
- *  1. `touchAction: 'pan-y'` en el contenedor le dice al navegador que
- *     el scroll vertical con el dedo lo sigue resolviendo él mismo de
- *     forma nativa, pero que NO reserve el gesto horizontal para
- *     scrollear — así un swipe horizontal no compite con la decisión de
- *     scroll del navegador y responde al instante, sin lag inicial.
- *  2. En JS, los primeros píxeles de cada toque deciden el eje del
- *     gesto (`AXIS_LOCK_THRESHOLD`): si domina el vertical, no se toca
- *     la posición de la tarjeta y se deja que el scroll nativo (punto
- *     1) haga lo suyo; si domina el horizontal, recién ahí la tarjeta
- *     empieza a seguir al dedo 1 a 1 (`dragX`).
- * Sólo se llama a `preventDefault` cuando el eje ya quedó confirmado
- * como horizontal (ver BUGFIX v5 más abajo) — mientras el gesto sigue
- * siendo vertical o todavía no se decidió, el listener no interfiere y
- * el scroll de la página nunca se bloquea.
+ * El track monta tres fotos (anterior / actual / siguiente) y las dos
+ * vecinas iban con `loading="eager"`. En el Home eso son 9 imágenes de
+ * golpe para las 3 destacadas (6 de ellas invisibles); en el listado
+ * del sitio público, con la copia gemela de este componente, eran 18.
  *
- * Implementación del arrastre: un "track" flex de 3 fotos (anterior /
- * actual / siguiente, cada una 1/3 del ancho del track) que se traduce
- * con `translateX`. En reposo muestra la del medio; mientras se arrastra,
- * `dragX` (px) se suma a esa posición para que siga al dedo sin demora.
+ * Esas imágenes invisibles compiten por ancho de banda y por las
+ * conexiones del navegador contra las que sí se están viendo, y contra
+ * la foto del hero, que es el LCP del Home.
  *
- * BUGFIX (Sep 2026, v2): seguía quedando un hilo de la foto siguiente
- * asomando del lado derecho al terminar de deslizar. La causa: el ancho
- * de cada foto (`width: calc(100% / 3)`) y el desplazamiento del track
- * (`translateX(calc(-100% / 3))`) son dos porcentajes que, en teoría,
- * salen del mismo cálculo — pero el motor de layout redondea el ancho
- * de cada slide al pixel de dispositivo más cercano para que la grilla
- * de la pantalla quede nítida, mientras que `transform` interpola en
- * punto flotante sin ese mismo redondeo. Con anchos de tarjeta que no
- * son múltiplos exactos de 3 (la gran mayoría), esos dos redondeos no
- * coinciden y dejan un hueco de uno o dos píxeles con la foto siguiente
- * asomando — más notorio al terminar de deslizar porque ahí la tarjeta
- * queda quieta y el ojo lo detecta.
+ * Ahora las vecinas se montan recién con la primera señal de intención
+ * (toque, hover, foco en una flecha) o cuando el navegador queda en
+ * reposo, y aun entonces van con `loading="lazy"`.
  *
- * La solución definitiva: dejar de calcular en porcentaje y medir el
- * ancho real del contenedor en píxeles (`slideWidth`, vía
- * `ResizeObserver`) una única vez por tamaño de pantalla, y usar ESE
- * MISMO NÚMERO tanto para el ancho de cada foto como para el
- * desplazamiento del track. Al ser literalmente el mismo valor no hay
- * dos redondeos independientes que puedan desalinearse — encastra pixel
- * perfect sin importar el ancho real de la tarjeta. Mientras el ancho
- * todavía no se midió (primer render antes de que corra el efecto) se
- * usa el porcentaje como respaldo, para no dejar la foto en 0px.
+ * El gesto no cambia: el `touchstart` monta las vecinas ANTES de que el
+ * dedo recorra los 8px que confirman el eje horizontal
+ * (`AXIS_LOCK_THRESHOLD`), así que para cuando la vecina tiene que
+ * verse ya está pedida. Los tres `<div>` de slide se siguen
+ * renderizando siempre, así que la geometría del track y el ancho
+ * medido no cambian en absoluto — cero salto de layout.
  *
- * Al soltar: si el gesto superó el umbral (distancia o velocidad, ver
- * BUGFIX v3), se anima el resto del camino hasta el borde (con
- * transición CSS, activada sólo en ese momento vía `isAnimating`) y al
- * terminar la animación (`onTransitionEnd`) recién ahí cambia el
- * `index`, `commitDir` vuelve a 0 y la posición vuelve al centro sin
- * transición — la foto del borde que se ve en ese instante es la misma
- * que pasa a ser la del centro, así que el cambio es invisible (el
- * truco clásico del carrusel infinito). Si no superó el umbral, se
- * anima de vuelta al centro sin cambiar de foto.
+ * ── EL RESTO DEL COMPORTAMIENTO (sin cambios) ──────────────────────
  *
- * BUGFIX (Sep 2026, v3) — dos problemas reportados:
- *  a) "Cambia muy lento": la transición bajó de 280ms a 190ms y ahora
- *     además hay un umbral por VELOCIDAD (`SWIPE_VELOCITY_THRESHOLD`),
- *     no sólo por distancia — un flick corto y rápido (como en apps
- *     nativas) también cambia de foto, no hace falta arrastrar 45px.
- *  b) "Si deslizo muy rápido a veces no funciona": pasaba cuando un
- *     segundo swipe empezaba ANTES de que terminara la animación de
- *     "commit" del primero. Al cortar la transición a mano
- *     (`isAnimating -> false`) el navegador NO dispara `transitionend`
- *     (sólo se dispara si la transición llega a destino), que era el
- *     único lugar donde se actualizaba `index`. Resultado: el índice
- *     quedaba pegado y el próximo gesto arrancaba desde una posición
- *     inconsistente. Ahora `handleTouchStart` resuelve a mano cualquier
- *     commit pendiente (`commitDir !== 0`) apenas entra un dedo nuevo,
- *     antes de arrancar el nuevo gesto — así nunca queda un swipe a
- *     medio resolver, sin importar cuán rápido se encadenen.
+ * El swipe sólo existe en pantallas táctiles y convive con las flechas:
+ * las flechas cambian de foto al instante; el swipe arrastra la foto
+ * detrás del dedo y sólo se anima al soltar.
  *
- * BUGFIX (Sep 2026, v5) — "a veces, al deslizar el carrusel, se mueve
- * la página en vertical en vez de cambiar de foto": `touchAction:
- * 'pan-y'` (punto 1 más arriba) es sólo una PISTA para el navegador,
- * no una garantía. El navegador decide si el gesto es un scroll
- * vertical mirando los primerísimos píxeles del touchmove — una
- * decisión que corre en paralelo a nuestro propio AXIS_LOCK_THRESHOLD
- * en JS, y ambos no siempre coinciden: un swipe horizontal real casi
- * nunca es 100% horizontal desde el primer píxel (el dedo tiene una
- * mínima deriva vertical), y si esa deriva inicial es la que el
- * navegador alcanza a leer primero, se queda con el gesto como scroll
- * vertical antes de que nuestro JS termine de decidir que en realidad
- * es horizontal.
+ * `touchAction: 'pan-y'` + bloqueo de eje en JS evitan que el swipe
+ * horizontal pelee con el scroll vertical de la lista. BUGFIX v5: el
+ * `touchmove` se registra a mano con `{ passive: false }` porque es la
+ * única forma de que `preventDefault()` tenga efecto real (el prop
+ * `onTouchMove` de React es pasivo por default).
  *
- * La única forma de ganarle esa carrera es cancelar explícitamente el
- * scroll nativo (`preventDefault()`) apenas nuestro JS confirma que el
- * eje es horizontal. El problema: React marca como PASIVO por default
- * cualquier `onTouchMove` agregado vía JSX (para no trabar el scroll
- * normal de la página en el caso general), y en un listener pasivo
- * `preventDefault()` no hace nada — el navegador lo ignora en
- * silencio, sin ni siquiera un error. Por eso, aunque nada en el
- * código anterior lo impedía activamente, tampoco lo lograba de
- * verdad.
+ * BUGFIX v2: el ancho de cada slide se mide en píxeles reales
+ * (`slideWidth`, vía `ResizeObserver`) y ese mismo número se usa para
+ * el ancho de la foto y para el desplazamiento del track, así no hay
+ * dos redondeos independientes que dejen un hilo asomando.
  *
- * La solución: registrar el touchmove A MANO con `addEventListener` y
- * `{ passive: false }` (ver el `useLayoutEffect` más abajo, en vez del
- * prop `onTouchMove` de React), que es la única forma de que
- * `preventDefault()` tenga efecto real. `touchstart`/`touchend` se
- * dejan como estaban (vía JSX): ahí no hace falta cancelar nada.
+ * BUGFIX v3: transición de 190ms + umbral por velocidad además del de
+ * distancia, y `handleTouchStart` resuelve cualquier commit pendiente
+ * para que dos swipes encadenados no dejen el índice pegado.
  */
-export function PropertyCardImageView({ images, title, href, badgeClass, badgeLabel, Link, Image }: PropertyCardImageViewProps) {
+export function PropertyCardImageView({
+  images,
+  title,
+  href,
+  badgeClass,
+  badgeLabel,
+  Link,
+  Image,
+  priority = false,
+}: PropertyCardImageViewProps) {
   const [index, setIndex] = useState(0);
   const hasMultipleImages = images.length > 1;
   const total = images.length;
@@ -154,24 +121,49 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
   const prevImage = hasMultipleImages ? images[(index - 1 + total) % total] ?? currentImage : currentImage;
   const nextImage = hasMultipleImages ? images[(index + 1) % total] ?? currentImage : currentImage;
 
+  /** ¿Ya se pueden montar las fotos vecinas? Ver el bloque de arriba. */
+  const [neighborsReady, setNeighborsReady] = useState(false);
+
+  useEffect(() => {
+    if (!hasMultipleImages || neighborsReady) return;
+
+    type IdleWindow = Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const w = window as IdleWindow;
+
+    if (typeof w.requestIdleCallback === 'function') {
+      const handle = w.requestIdleCallback(() => setNeighborsReady(true), {
+        timeout: NEIGHBOR_PRELOAD_DELAY_MS,
+      });
+      return () => w.cancelIdleCallback?.(handle);
+    }
+
+    const timer = setTimeout(() => setNeighborsReady(true), NEIGHBOR_PRELOAD_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [hasMultipleImages, neighborsReady]);
+
   function goPrev(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    setNeighborsReady(true);
     setIndex((i) => (i - 1 + total) % total);
   }
 
   function goNext(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    setNeighborsReady(true);
     setIndex((i) => (i + 1) % total);
   }
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [slideWidth, setSlideWidth] = useState(0);
 
-  // Medido en píxeles reales del contenedor — ver BUGFIX v2 más arriba.
-  // useLayoutEffect (no useEffect) para que corra antes del primer
-  // paint del navegador y no haya un parpadeo con el ancho en 0.
+  // Medido en píxeles reales del contenedor — ver BUGFIX v2.
+  // useLayoutEffect para que corra antes del primer paint y no haya un
+  // parpadeo con el ancho en 0.
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el || !hasMultipleImages) return;
@@ -186,9 +178,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     return () => observer.disconnect();
   }, [hasMultipleImages]);
 
-  // Se llena más abajo, luego de definir handleTouchMove — declarado acá
-  // arriba para que el useLayoutEffect que registra el listener nativo
-  // (ver BUGFIX v5) pueda ir antes en el archivo sin problema de orden.
+  // Se llena más abajo, luego de definir handleTouchMove.
   const handleTouchMoveRef = useRef<(e: TouchEvent) => void>(() => {});
 
   const touchRef = useRef<{ x: number; y: number; time: number; axis: 'x' | 'y' | null } | null>(null);
@@ -200,11 +190,9 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     if (!hasMultipleImages) return;
     const t = e.touches[0];
     if (!t) return;
-    // Ver BUGFIX v3: si entra un dedo nuevo mientras todavía había un
-    // commit pendiente de resolverse (swipes encadenados muy rápido),
-    // lo resolvemos ya mismo en vez de dejarlo colgado — cortar la
-    // transición a mano no dispara `transitionend`, así que sin esto el
-    // índice se queda pegado.
+    // Primera señal de intención: montar las vecinas ya mismo.
+    setNeighborsReady(true);
+    // Ver BUGFIX v3: resolver a mano cualquier commit pendiente.
     if (commitDir !== 0) {
       setIndex((i) => (commitDir === 1 ? (i + 1) % total : (i - 1 + total) % total));
       setCommitDir(0);
@@ -225,28 +213,15 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
       state.axis = Math.abs(deltaX) > Math.abs(deltaY) ? 'x' : 'y';
     }
     if (state.axis !== 'x') return;
-    // BUGFIX v5: recién acá, con el eje ya confirmado como horizontal,
-    // cancelamos el scroll vertical que el navegador pudo haber
-    // empezado a considerar con este mismo gesto. Sólo tiene efecto
-    // real porque este handler se conecta más abajo vía
-    // addEventListener(..., { passive: false }) — con el prop
-    // `onTouchMove` de React (pasivo por default) esta línea sería un
-    // no-op silencioso.
+    // BUGFIX v5: con el eje ya confirmado como horizontal, cancelamos
+    // el scroll vertical que el navegador pudo haber empezado.
     e.preventDefault();
     setDragX(deltaX);
   }
-  // Siempre la versión más nueva de la función (con el `index`, `total`,
-  // etc. del render actual) disponible para el listener nativo de abajo,
-  // sin tener que reconectar ese listener en cada render.
   handleTouchMoveRef.current = handleTouchMove;
 
-  // BUGFIX v5 (ver el comentario grande sobre el componente): registrado
-  // a mano porque es la ÚNICA forma de que `preventDefault()` dentro de
-  // `handleTouchMove` tenga efecto — el prop `onTouchMove` de React lo
-  // agrega como listener pasivo por default, y ahí el navegador ignora
-  // `preventDefault()` en silencio. `touchstart`/`touchend` no lo
-  // necesitan y se quedan con el prop normal de React, más abajo en el
-  // JSX.
+  // BUGFIX v5: registrado a mano, única forma de que preventDefault
+  // tenga efecto real.
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el || !hasMultipleImages) return;
@@ -264,9 +239,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     }
     const t = e.changedTouches[0];
     const deltaX = t ? t.clientX - state.x : 0;
-    // Umbral doble (BUGFIX v3): por distancia (arrastre largo, clásico) o
-    // por velocidad (flick corto y rápido, como en apps nativas) — así un
-    // deslizón veloz pero corto también cambia de foto.
+    // Umbral doble (BUGFIX v3): por distancia o por velocidad.
     const elapsedMs = Math.max(1, e.timeStamp - state.time);
     const velocity = Math.abs(deltaX) / elapsedMs;
     const isSwipe =
@@ -288,12 +261,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
     setIsAnimating(false);
   }
 
-  // Todo en la misma unidad que el ancho real de cada foto (px) — así
-  // el desplazamiento del track siempre encastra exacto con el borde de
-  // la foto, sin depender de que dos porcentajes redondeen igual.
-  // `slideWidth === 0` sólo pasa en el primer render, antes de que el
-  // efecto mida el contenedor: ahí se usa el porcentaje de siempre como
-  // respaldo transitorio.
+  // Todo en la misma unidad que el ancho real de cada foto (px).
   const hasMeasuredWidth = slideWidth > 0;
   const trackWidthPx = slideWidth * 3;
   const restShiftPx = -slideWidth;
@@ -324,6 +292,7 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onMouseEnter={hasMultipleImages ? () => setNeighborsReady(true) : undefined}
     >
       <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
       <Link
@@ -345,27 +314,80 @@ export function PropertyCardImageView({ images, title, href, badgeClass, badgeLa
               willChange: 'transform',
             }}
           >
+            {/* Los tres <div> se renderizan SIEMPRE (el track necesita
+                sus tres anchos). Lo que se difiere es el <Image> de
+                adentro de las dos vecinas. */}
             <div style={{ ...SLIDE_BASE_STYLE, width: slideWidthStyle }} aria-hidden="true">
-              <Image src={prevImage} alt="" fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} loading="eager" />
+              {neighborsReady && (
+                <Image
+                  src={prevImage}
+                  alt=""
+                  fill
+                  sizes={CARD_IMAGE_SIZES}
+                  quality={CARD_IMAGE_QUALITY}
+                  style={{ objectFit: 'cover' }}
+                  loading="lazy"
+                />
+              )}
             </div>
             <div style={{ ...SLIDE_BASE_STYLE, width: slideWidthStyle }}>
-              <Image src={currentImage} alt={title} fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} />
+              <Image
+                src={currentImage}
+                alt={title}
+                fill
+                sizes={CARD_IMAGE_SIZES}
+                quality={CARD_IMAGE_QUALITY}
+                style={{ objectFit: 'cover' }}
+                priority={priority}
+                {...(priority ? {} : { loading: 'lazy' as const })}
+              />
             </div>
             <div style={{ ...SLIDE_BASE_STYLE, width: slideWidthStyle }} aria-hidden="true">
-              <Image src={nextImage} alt="" fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} loading="eager" />
+              {neighborsReady && (
+                <Image
+                  src={nextImage}
+                  alt=""
+                  fill
+                  sizes={CARD_IMAGE_SIZES}
+                  quality={CARD_IMAGE_QUALITY}
+                  style={{ objectFit: 'cover' }}
+                  loading="lazy"
+                />
+              )}
             </div>
           </div>
         ) : (
-          <Image src={currentImage} alt={title} fill sizes={CARD_IMAGE_SIZES} style={{ objectFit: 'cover' }} />
+          <Image
+            src={currentImage}
+            alt={title}
+            fill
+            sizes={CARD_IMAGE_SIZES}
+            quality={CARD_IMAGE_QUALITY}
+            style={{ objectFit: 'cover' }}
+            priority={priority}
+            {...(priority ? {} : { loading: 'lazy' as const })}
+          />
         )}
       </Link>
 
       {hasMultipleImages && (
         <div className="property-image-nav">
-          <button type="button" className="property-image-nav-btn property-image-nav-prev" aria-label="Imagen anterior" onClick={goPrev}>
+          <button
+            type="button"
+            className="property-image-nav-btn property-image-nav-prev"
+            aria-label="Imagen anterior"
+            onClick={goPrev}
+            onFocus={() => setNeighborsReady(true)}
+          >
             <ChevronLeft aria-hidden="true" size={18} className="property-image-nav-icon" />
           </button>
-          <button type="button" className="property-image-nav-btn property-image-nav-next" aria-label="Imagen siguiente" onClick={goNext}>
+          <button
+            type="button"
+            className="property-image-nav-btn property-image-nav-next"
+            aria-label="Imagen siguiente"
+            onClick={goNext}
+            onFocus={() => setNeighborsReady(true)}
+          >
             <ChevronRight aria-hidden="true" size={18} className="property-image-nav-icon" />
           </button>
         </div>
