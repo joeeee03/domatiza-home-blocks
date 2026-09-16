@@ -621,8 +621,6 @@ body.mobile-menu-open .header .logo-text {
 
    Pulido v2 (a pedido del usuario — "más lindo estéticamente" + el
    botón de Llamar quedaba muy débil al lado del de WhatsApp):
-   - El panel gana esquinas inferiores redondeadas (antes a escuadra),
-     se siente más una "hoja" flotante que una caja recortada.
    - La fila activa suma una barrita de acento a la izquierda además
      del fondo tenue (mismo lenguaje visual que el ::after del nav de
      escritorio), para que "página actual" se lea de un vistazo.
@@ -631,7 +629,14 @@ body.mobile-menu-open .header .logo-text {
    - El cambio principal: "Llamar" deja de ser un outline gris apagado
      — ahora es un botón sólido en el verde de marca, con la misma
      sombra/peso visual que WhatsApp. Quedan como un par parejo en vez
-     de uno sólido y uno "fantasma". */
+     de uno sólido y uno "fantasma".
+
+   (Se probó redondear las esquinas inferiores del panel para que se
+   sienta más "hoja" flotante, pero como el backdrop es transparente a
+   propósito, esas curvas dejaban ver el contenido de la página por los
+   huecos y la línea inferior se veía cortada/incompleta en vez de una
+   línea recta — se revirtió: el panel vuelve a esquina recta, borde a
+   borde, igual que la referencia.) */
 .mobile-menu-backdrop {
   position: fixed;
   inset: 0;
@@ -646,7 +651,6 @@ body.mobile-menu-open .header .logo-text {
   right: 0;
   z-index: 999;
   background-color: var(--color-bg-surface);
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   box-shadow: var(--shadow-xl);
   max-height: calc(100vh - 76px);
   max-height: calc(100dvh - 76px);
@@ -860,7 +864,7 @@ body.mobile-menu-open .header .logo-text {
 .mobile-menu-cta {
   display: flex;
   gap: var(--space-3);
-  padding: var(--space-5) var(--space-6) var(--space-6);
+  padding: var(--space-4) var(--space-6) var(--space-6);
   padding-bottom: calc(var(--space-6) + var(--safe-bottom, 0px));
 }
 
