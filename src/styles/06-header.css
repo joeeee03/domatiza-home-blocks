@@ -617,7 +617,21 @@ body.mobile-menu-open .header .logo-text {
 
    `.mobile-menu-backdrop` es un click-catcher transparente (sin
    oscurecer nada) que permite cerrar el menú tocando afuera del panel,
-   además del botón X y Escape que ya existían. */
+   además del botón X y Escape que ya existían.
+
+   Pulido v2 (a pedido del usuario — "más lindo estéticamente" + el
+   botón de Llamar quedaba muy débil al lado del de WhatsApp):
+   - El panel gana esquinas inferiores redondeadas (antes a escuadra),
+     se siente más una "hoja" flotante que una caja recortada.
+   - La fila activa suma una barrita de acento a la izquierda además
+     del fondo tenue (mismo lenguaje visual que el ::after del nav de
+     escritorio), para que "página actual" se lea de un vistazo.
+   - El botón circular de Servicios/Herramientas pasa de un rectángulo
+     que estiraba toda la fila a un ícono de 44px centrado.
+   - El cambio principal: "Llamar" deja de ser un outline gris apagado
+     — ahora es un botón sólido en el verde de marca, con la misma
+     sombra/peso visual que WhatsApp. Quedan como un par parejo en vez
+     de uno sólido y uno "fantasma". */
 .mobile-menu-backdrop {
   position: fixed;
   inset: 0;
@@ -632,6 +646,7 @@ body.mobile-menu-open .header .logo-text {
   right: 0;
   z-index: 999;
   background-color: var(--color-bg-surface);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   box-shadow: var(--shadow-xl);
   max-height: calc(100vh - 76px);
   max-height: calc(100dvh - 76px);
@@ -687,7 +702,28 @@ body.mobile-menu-open .header .logo-text {
   color: var(--color-text-primary);
   text-align: left;
   border-bottom: 1px solid var(--color-border);
+  position: relative;
   transition: background-color 180ms ease, color 180ms ease;
+}
+
+/* Barrita de acento de la fila activa — además del fondo tenue, un
+   indicador propio a la izquierda (mismo lenguaje visual que el
+   ::after de .nav-link en escritorio) para que "página actual" se lea
+   de un vistazo, no sólo por el tono de fondo. */
+.mobile-nav-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-secondary-600);
+  transition: width 200ms var(--header-ease);
+}
+
+.mobile-nav-link.active::before {
+  width: 3px;
 }
 
 .mobile-nav-link:hover {
@@ -729,8 +765,12 @@ body.mobile-menu-open .header .logo-text {
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
   flex-shrink: 0;
-  width: 52px;
+  width: 44px;
+  height: 44px;
+  margin-right: var(--space-3);
+  border-radius: var(--radius-full);
   background: none;
   border: none;
   color: var(--color-text-secondary);
@@ -744,11 +784,12 @@ body.mobile-menu-open .header .logo-text {
 
 .mobile-nav-group-toggle:hover {
   background-color: var(--color-primary-100);
-  color: var(--color-text-primary);
+  color: var(--color-primary-600);
 }
 
 .mobile-nav-group-toggle.open {
   color: var(--color-secondary-600);
+  background-color: var(--color-secondary-100);
 }
 
 .mobile-nav-group-toggle.open svg {
@@ -819,8 +860,8 @@ body.mobile-menu-open .header .logo-text {
 .mobile-menu-cta {
   display: flex;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-6);
-  padding-bottom: calc(var(--space-4) + var(--safe-bottom, 0px));
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  padding-bottom: calc(var(--space-6) + var(--safe-bottom, 0px));
 }
 
 .mobile-menu-cta-btn {
@@ -829,45 +870,48 @@ body.mobile-menu-open .header .logo-text {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  height: 48px;
-  border-radius: var(--radius-md);
+  height: 52px;
+  border-radius: var(--radius-lg);
+  border: none;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
-  transition: transform 200ms var(--header-ease), box-shadow 200ms ease, background-color 200ms ease,
-    border-color 200ms ease;
+  letter-spacing: 0.01em;
+  transition: transform 200ms var(--header-ease), box-shadow 200ms ease, filter 150ms ease;
 }
 
 .mobile-menu-cta-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
 }
 
 .mobile-menu-cta-whatsapp {
-  background-color: var(--color-whatsapp);
+  background: linear-gradient(155deg, #2FE076 0%, var(--color-whatsapp) 70%);
   color: #FFFFFF;
-  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.28);
+  box-shadow: 0 8px 20px -4px rgba(37, 211, 102, 0.45);
 }
 
 .mobile-menu-cta-whatsapp:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.34);
+  box-shadow: 0 10px 24px -4px rgba(37, 211, 102, 0.52);
+  filter: brightness(1.04);
 }
 
 .mobile-menu-cta-phone {
-  background-color: var(--color-bg-surface);
-  color: var(--color-primary-600);
-  border: 1.5px solid var(--color-border-strong);
+  background: linear-gradient(155deg, var(--color-primary-600) 0%, var(--color-primary-700) 85%);
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px -4px rgba(13, 55, 51, 0.45);
 }
 
 .mobile-menu-cta-phone:hover {
-  background-color: var(--color-primary-100);
-  border-color: var(--color-primary-600);
   transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(13, 55, 51, 0.52);
+  filter: brightness(1.12);
 }
 
 .mobile-menu-cta-btn:active {
   transform: translateY(0) scale(0.98);
+  filter: brightness(0.97);
 }
 
 .mobile-menu-cta-btn:focus-visible {
