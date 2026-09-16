@@ -103,6 +103,12 @@ const SLIDE_BASE_STYLE: CSSProperties = {
  * BUGFIX v3: transición de 190ms + umbral por velocidad además del de
  * distancia, y `handleTouchStart` resuelve cualquier commit pendiente
  * para que dos swipes encadenados no dejen el índice pegado.
+ *
+ * MEJORA v4: los puntitos de posición se interpolan durante el arrastre
+ * en vez de saltar de forma binaria (ver el estado `dotAnim`) — mismo
+ * comportamiento, línea por línea, que `PropertyCardImage.tsx` (el
+ * gemelo de este componente en el repo público), para que "Propiedades
+ * destacadas" del Home se sienta idéntico a las cards de /propiedades.
  */
 export function PropertyCardImageView({
   images,
@@ -186,6 +192,19 @@ export function PropertyCardImageView({
   const [commitDir, setCommitDir] = useState<0 | 1 | -1>(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  /**
+   * Estado del puntito de posición durante un swipe (MEJORA v4).
+   * `null` = reposo: los puntitos no reciben ningún estilo inline y
+   * dependen 100% de la clase `.property-image-dot--active`.
+   *
+   * `dir`: hacia qué vecino (siguiente=1 / anterior=-1) se mueve.
+   * `progress`: 0 a 1, cuánto camino recorrió hacia ese vecino.
+   * `animate`: false mientras se arrastra (sigue al dedo 1 a 1, sin
+   * transición CSS); true al soltar, para animar el tramo final con la
+   * misma duración/curva que el track de fotos.
+   */
+  const [dotAnim, setDotAnim] = useState<{ dir: 1 | -1; progress: number; animate: boolean } | null>(null);
+
   function handleTouchStart(e: ReactTouchEvent) {
     if (!hasMultipleImages) return;
     const t = e.touches[0];
@@ -200,6 +219,7 @@ export function PropertyCardImageView({
     touchRef.current = { x: t.clientX, y: t.clientY, time: e.timeStamp, axis: null };
     setIsAnimating(false);
     setDragX(0);
+    setDotAnim(null);
   }
 
   function handleTouchMove(e: TouchEvent) {
@@ -217,6 +237,17 @@ export function PropertyCardImageView({
     // el scroll vertical que el navegador pudo haber empezado.
     e.preventDefault();
     setDragX(deltaX);
+    // Puntito: sigue al dedo 1 a 1, sin transición (`animate: false`).
+    const dir: 1 | -1 | 0 = deltaX < 0 ? 1 : deltaX > 0 ? -1 : 0;
+    if (dir === 0) {
+      setDotAnim(null);
+    } else {
+      setDotAnim({
+        dir,
+        progress: slideWidth > 0 ? Math.min(1, Math.abs(deltaX) / slideWidth) : 0,
+        animate: false,
+      });
+    }
   }
   handleTouchMoveRef.current = handleTouchMove;
 
@@ -235,6 +266,7 @@ export function PropertyCardImageView({
     touchRef.current = null;
     if (!state || state.axis !== 'x') {
       setDragX(0);
+      setDotAnim(null);
       return;
     }
     const t = e.changedTouches[0];
@@ -250,6 +282,14 @@ export function PropertyCardImageView({
       setCommitDir(deltaX < 0 ? 1 : -1);
     }
     setDragX(0);
+    // Puntito: fija el destino final con `animate: true` — misma
+    // duración/curva que el track, para que terminen en sincro.
+    const dir: 1 | -1 | 0 = deltaX < 0 ? 1 : deltaX > 0 ? -1 : 0;
+    if (dir === 0) {
+      setDotAnim(null);
+    } else {
+      setDotAnim({ dir, progress: isSwipe ? 1 : 0, animate: true });
+    }
   }
 
   function handleTrackTransitionEnd(e: TransitionEvent<HTMLDivElement>) {
@@ -259,6 +299,9 @@ export function PropertyCardImageView({
     }
     setCommitDir(0);
     setIsAnimating(false);
+    // El puntito ya terminó su propia transición — vuelve a reposo y a
+    // depender de la clase CSS, ahora con `index` ya actualizado.
+    setDotAnim(null);
   }
 
   // Todo en la misma unidad que el ancho real de cada foto (px).
@@ -279,6 +322,34 @@ export function PropertyCardImageView({
   const dotCount = Math.min(total, MAX_VISIBLE_DOTS);
   const activeDot =
     total <= MAX_VISIBLE_DOTS ? index : Math.round((index / (total - 1)) * (MAX_VISIBLE_DOTS - 1));
+
+  // Puntito vecino hacia el que se está arrastrando/animando (MEJORA
+  // v4) — sólo se interpola si no hay compresión (≤5 fotos) y el vecino
+  // real cae en la posición ADYACENTE de la fila.
+  const dotNeighborIndex = dotAnim ? (index + dotAnim.dir + total) % total : null;
+  const canInterpolateDots =
+    dotAnim !== null &&
+    total <= MAX_VISIBLE_DOTS &&
+    dotNeighborIndex !== null &&
+    Math.abs(dotNeighborIndex - index) === 1;
+
+  function dotStyle(dotIndex: number): CSSProperties | undefined {
+    if (!canInterpolateDots || !dotAnim || dotNeighborIndex === null) return undefined;
+    let amount: number; // 0 (inactivo) a 1 (activo) para ESTE puntito puntual
+    if (dotIndex === index) amount = 1 - dotAnim.progress;
+    else if (dotIndex === dotNeighborIndex) amount = dotAnim.progress;
+    else return undefined; // puntito no involucrado -- sigue con la clase CSS de siempre
+    return {
+      // Mismos valores que `.property-image-dot` /
+      // `.property-image-dot--active` en 12-featured.css, así en
+      // progress 0 o 1 calza pixel a pixel con la clase CSS.
+      transform: `scale(${1 + 0.3 * amount})`,
+      backgroundColor: `rgba(255, 255, 255, ${0.55 + 0.4 * amount})`,
+      transition: dotAnim.animate
+        ? `transform ${TRANSITION_MS}ms ${TRANSITION_EASING}, background-color ${TRANSITION_MS}ms ${TRANSITION_EASING}`
+        : 'none',
+    };
+  }
 
   return (
     <div
@@ -399,6 +470,7 @@ export function PropertyCardImageView({
             <span
               key={i}
               className={`property-image-dot${i === activeDot ? ' property-image-dot--active' : ''}`}
+              style={dotStyle(i)}
             />
           ))}
         </div>
