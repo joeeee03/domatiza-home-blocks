@@ -184,9 +184,10 @@
   }
 
   section.hero {
-    /* 56px = altura real del header en mobile + var(--space-8) de aire
-       para que el título no arranque pegado al borde del header. */
-    padding-top: calc(56px + var(--space-8));
+    /* Alto real del header en mobile (--header-h-mobile, definido en
+       01-variables.css) + var(--space-8) de aire para que el título no
+       arranque pegado al borde del header. */
+    padding-top: calc(var(--header-h-mobile) + var(--space-8));
     min-height: auto;
     padding-bottom: var(--space-16);
   }

@@ -41,8 +41,24 @@
 
   /* Marca — altura del isotipo compartida entre header y footer, así el
      logo se ve exactamente del mismo tamaño en los dos lugares. El
-     breakpoint mobile la reduce a 34px (ver 23-responsive.css). */
+     breakpoint mobile la reduce a 34px (ver 23-responsive.css). En
+     celular el isotipo del HEADER es una excepción: lo pisa
+     `26-chrome-responsive.css` con `.header .logo { height: 44px }`
+     para que llene mejor la barra más alta, sin tocar este token (o
+     sea, sin mover el logo del footer). */
   --brand-logo-h: 42px;
+
+  /* Alto real de la barra del header en celular (≤767px). Es un token
+     global —y no una variable local de `.header`, como el `--header-h`
+     de escritorio— porque el header es `position: fixed` y por lo
+     tanto no empuja nada: cada bloque que tiene que quedar DEBAJO de
+     él necesita saber este número. Hoy lo consumen cuatro lugares:
+     `.header` y `.mobile-menu` (06/26-chrome-responsive.css), el
+     Banner principal (`section.hero` en 23-responsive.css) y los hero
+     compactos de las páginas internas (36-components-responsive.css,
+     en public/). Si cambia el alto del header en mobile, se cambia
+     ACÁ y los cuatro siguen alineados solos. */
+  --header-h-mobile: 68px;
 
   /* Espaciado (base 8px) */
   --space-1: 4px;

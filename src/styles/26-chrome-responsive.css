@@ -65,14 +65,42 @@
 
 @media (max-width: 767px) {
   /* Mobile */
+
+  /* Barra del header en celular — sólo tiene dos cosas: el isotipo a la
+     izquierda y el botón del menú a la derecha. Con 56px de alto y un
+     logo de 34px quedaba apretada y el logo chico, así que:
+
+       - el alto pasa a `--header-h-mobile` (68px, definido en
+         01-variables.css porque lo necesitan también `.mobile-menu`,
+         `section.hero` y los hero compactos de las páginas internas);
+       - el isotipo y el botón del menú miden los dos 44px. Que sean
+         iguales es a propósito: los dos extremos de la barra tienen
+         exactamente la misma altura, y el aire de arriba y de abajo
+         queda parejo y medido — (68 - 44) / 2 = 12px por lado. */
   .header {
-    height: 56px;
-    --header-item-h: 36px;
+    --header-h: var(--header-h-mobile);
+    --header-item-h: 44px;
   }
 
   :root,
   :host {
     --brand-logo-h: 34px;
+  }
+
+  /* El isotipo del header crece SIN tocar `--brand-logo-h`, que es el
+     token compartido con el footer — allá el logo sigue en 34px. */
+  .header .logo {
+    height: 44px;
+  }
+
+  /* El nav de escritorio está en `display: none`, así que de las tres
+     columnas de `.header-content` (auto 1fr auto) quedan ocupadas la
+     1ra (logo) y la 2da (`.header-utils`, que con su `justify-self:
+     end` se pega al borde derecho). El gap baja de 24 a 16px: con dos
+     elementos y todo el ancho libre entre ellos, 24px era aire que no
+     hacía falta. */
+  .header-content {
+    column-gap: var(--space-4);
   }
 
   /* El header en celular sólo tiene lugar para el logo y el botón de
@@ -83,9 +111,29 @@
     display: none;
   }
 
+  /* Sin gap: el botón del menú es lo único que queda adentro. */
   .header-utils {
-    gap: var(--space-2);
+    gap: 0;
   }
+
+  /* Compensación óptica. El botón mide 44×44 (target táctil mínimo)
+     pero las barras del ícono miden 24px, o sea que quedan centradas
+     con 10px de aire a cada lado. Sin este margen negativo, el ícono
+     se vería 10px más adentro que el borde izquierdo del logo y la
+     barra se leería desbalanceada. Con -10px, el borde derecho de las
+     barras cae exactamente sobre los 24px de padding del `.container`:
+     logo y menú terminan a la misma distancia de su propio borde. */
+  .mobile-menu-toggle {
+    margin-right: -10px;
+  }
+
+  .mobile-menu-toggle span {
+    width: 24px;
+  }
+
+  /* El `top` del panel del menú móvil NO se declara acá para no
+     duplicarlo: ya vive en `06-header.css`, junto al resto de
+     `.mobile-menu`, y también lee `--header-h-mobile`. */
 }
 
 /* Pantallas muy chicas (320px). A propósito DESPUÉS del bloque mobile
