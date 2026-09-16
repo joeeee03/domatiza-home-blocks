@@ -187,6 +187,26 @@
 
 .property-badge {
   position: absolute;
+  /* BUGFIX: en PropertyGallery.tsx, PropertyCardImage.tsx y
+     PropertyCardImageView.tsx (home-blocks) el <span> del badge se
+     renderiza en el JSX ANTES que el <Link>/track de la foto, no
+     después. Con las tres fotos del carrusel montadas con `fill`
+     (position: absolute) y el <Link> que las envuelve en
+     `position: relative`, ambos elementos quedan "positioned" con
+     z-index:auto -- y sin z-index explícito, el orden de pintado
+     entre elementos posicionados sigue el orden del DOM (spec
+     CSS2.1 Apéndice E), así que el que viene DESPUÉS en el árbol
+     (la foto) se pinta encima del que viene ANTES (el badge),
+     tapándolo por completo. Pasaba en los tres lugares que comparten
+     esta regla (Home, listado de /propiedades y ficha de detalle),
+     en cualquier ancho de pantalla -- no era un problema de mobile
+     específicamente, el badge nunca llegaba a verse en ningún lado.
+     Con z-index explícito (>0) el badge pasa a su propio stacking
+     context de nivel positivo, que SIEMPRE se pinta después que los
+     elementos z-index:auto de alrededor, sin importar el orden en
+     el DOM -- queda por encima de la foto sin tener que reordenar
+     el JSX de los tres componentes. */
+  z-index: 2;
   top: var(--space-4);
   left: var(--space-4);
   padding: var(--space-1) var(--space-3);
