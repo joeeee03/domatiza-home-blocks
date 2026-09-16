@@ -1,5 +1,5 @@
 import type { HostLinkComponent } from '../host/hostTypes';
-import { SearchFormView } from './SearchFormView';
+import { SearchFormView, type SearchFormOption } from './SearchFormView';
 import { EditableText, EditableImageArea } from '../editor/Editable';
 
 export interface HeroViewProps {
@@ -7,6 +7,16 @@ export interface HeroViewProps {
   subtitle: string;
   imageUrl: string | null;
   Link: HostLinkComponent;
+  /**
+   * FIX (buscador del home) — catálogos reales del tenant para el
+   * `<SearchFormView>` de adentro. Opcionales: el canvas del Editor de
+   * página del admin monta esta vista sin ellos y cae al fallback
+   * documentado en `SearchFormView.tsx`. El público SÍ los pasa (ver
+   * `Hero.tsx`): sin eso, el buscador arma URLs con slugs que no
+   * existen y el listado devuelve cero resultados.
+   */
+  propertyTypes?: SearchFormOption[];
+  locations?: SearchFormOption[];
 }
 
 /**
@@ -22,7 +32,7 @@ export interface HeroViewProps {
  * Sin `<HomeBlocksEditorProvider>` en el árbol (siempre el caso en el
  * público) las dos primitivas caen a exactamente el JSX de antes.
  */
-export function HeroView({ title, subtitle, imageUrl, Link }: HeroViewProps) {
+export function HeroView({ title, subtitle, imageUrl, Link, propertyTypes, locations }: HeroViewProps) {
   return (
     <section className="hero">
       <EditableImageArea
@@ -51,7 +61,7 @@ export function HeroView({ title, subtitle, imageUrl, Link }: HeroViewProps) {
             placeholder="Subtítulo del banner"
           />
 
-          <SearchFormView />
+          <SearchFormView propertyTypes={propertyTypes} locations={locations} />
 
           <div className="hero-cta">
             <Link href="/tasar-propiedad" className="btn btn-tertiary">
