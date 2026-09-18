@@ -293,3 +293,63 @@
     display: flex;
   }
 }
+
+/* ===================================================================
+   TARJETAS-2 — tipo de propiedad + ubicación, e indicador "Destacada"
+   ===================================================================
+   Todo dentro de .property-content (debajo de la foto) a propósito:
+   sobre .property-image (la línea de arriba, ni acá ni en ningún otro
+   archivo de esta capa) no se agrega nada nuevo -- se mantiene
+   únicamente el badge de venta/alquiler que ya existe hoy, sin
+   acompañantes. Reusa el design system existente (01-variables.css),
+   ninguna variable nueva. */
+
+/* Línea nueva entre el título (h3) y .property-specs: tipo de
+   propiedad + ubicación juntos (ej. "Casa" + "San Nicolás de los
+   Arroyos"), cada uno con su propio ícono. Semánticamente aparte de
+   .property-specs (que son medidas/cantidades) -- esto es "qué es /
+   dónde está" -- así que va como bloque propio, no mezclado ahí
+   adentro. Sin separador visual tipo "·" en CSS: el ícono de cada
+   ítem ya cumple esa función, igual que ya hacen los spans de
+   .property-specs sin separadores entre ellos. */
+.property-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.property-meta span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* flex-wrap es importante acá: en una card angosta de mobile, un tipo
+   largo ("Oficina/Consultorio") + una localidad larga ("San Nicolás
+   de los Arroyos") no siempre entran en una sola línea -- con wrap, el
+   segundo ítem baja a una segunda línea en vez de cortarse o
+   desbordar la card. Los íconos de adentro de estos spans reusan
+   directamente la clase .property-specs-icon (16x16, ya definida
+   arriba en este mismo archivo) en vez de una clase nueva solo para
+   el tamaño, porque el criterio visual es el mismo. */
+
+/* Indicador inline de "Destacada", chico, pegado al precio (la
+   capa que consuma esto -- PropertyCard.tsx / PropertyCardView.tsx --
+   decide el layout exacto para ubicarlo junto a .property-price).
+   IMPORTANTE: el ícono Star debe ir con fill="currentColor" en el
+   JSX para que se vea "relleno" como una estrella real, no solo el
+   contorno -- si se omite ese prop, el ícono se ve hueco y no matchea
+   el resto de los usos de Star (ej. "Categoría" de hotel en
+   getPropertySpecs). */
+.property-featured-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent-600);
+}
