@@ -21,10 +21,11 @@ interface PropertyCardImageViewProps {
   badgeLabel: string;
   /**
    * Tipo de propiedad ya resuelto por el contenedor (ej. "Casa"). Se
-   * dibuja SOBRE la foto, pegado al badge de Venta/Alquiler dentro de
-   * una misma cápsula (`.property-badges` / `.property-type-badge`, ver
-   * 12-featured.css), con inicial mayúscula y el resto en minúsculas
-   * (ver `formatTypeChipLabel`). Opcional a propósito: sin este dato
+   * dibuja SOBRE la foto, al lado del badge de Venta/Alquiler, como un
+   * chip aparte del mismo alto y de otro color (`.property-badges` /
+   * `.property-type-badge`, ver 12-featured.css), con inicial mayúscula
+   * y el resto en minúsculas (ver `formatTypeChipLabel`). Opcional a
+   * propósito: sin este dato
    * (hoy, el canvas del editor de ADMIN, que arma su propio
    * `PropertyCardViewData` sin tipo) se renderiza sólo el badge de
    * operación, igual que antes.
@@ -390,9 +391,9 @@ export function PropertyCardImageView({
       onTouchEnd={handleTouchEnd}
       onMouseEnter={hasMultipleImages ? () => setNeighborsReady(true) : undefined}
     >
-      {/* Badges sobre la foto: una sola cápsula con la operación
-          (Venta/Alquiler) a la izquierda y el tipo de propiedad a la
-          derecha. Ver `.property-badges` en 12-featured.css. */}
+      {/* Badges sobre la foto: dos chips separados, uno al lado del
+          otro -- la operación (Venta/Alquiler) y el tipo de propiedad.
+          Ver `.property-badges` en 12-featured.css. */}
       <div className="property-badges">
         <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
         {typeLabel && <span className="property-type-badge">{formatTypeChipLabel(typeLabel)}</span>}

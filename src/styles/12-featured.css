@@ -226,18 +226,15 @@
   background-color: var(--color-primary-600);
 }
 
-/* Badges sobre la foto: UNA sola cápsula con la operación
-   (Venta/Alquiler) a la izquierda y el tipo de propiedad a la derecha.
+/* Badges sobre la foto: DOS chips separados, uno al lado del otro --
+   la operación (Venta/Alquiler) y el tipo de propiedad --, del mismo
+   alto (22px) y con 6px de separación.
 
    Antes el badge de operación era un <span> suelto con
-   `position: absolute` (.property-badge, arriba). Ahora los dos
-   segmentos viajan juntos dentro de este contenedor, que es el que se
-   posiciona sobre la esquina de la foto y el que aporta la forma de
-   píldora (border-radius + overflow:hidden), la sombra y el tope de
-   ancho. Cada segmento es un rectángulo plano de 22px de alto; el
-   redondeo lo pone el contenedor al recortarlos, así que si no hay
-   tipo, el badge de operación solo también queda como píldora
-   completa.
+   `position: absolute` (.property-badge, arriba). Ahora los dos chips
+   viajan dentro de este contenedor, que es el que se posiciona sobre
+   la esquina de la foto y el que les pone el tope de ancho; cada chip
+   es una píldora completa con su propia sombra.
 
    - Operación: color de marca (.badge-sale / .badge-rent), mayúsculas
      de 11px -- un escalón menos que el badge de antes (12px).
@@ -249,11 +246,11 @@
      letter-spacing: un tipo largo ocupa bastante menos ancho que en
      mayúsculas.
 
-   TIPO LARGO: la cápsula nunca pasa del ancho de la foto menos el
-   margen (max-width). El segmento de operación no se achica
+   TIPO LARGO: el contenedor nunca pasa del ancho de la foto menos el
+   margen (max-width). El chip de operación no se achica
    (flex-shrink: 0); el de tipo sí, y si aun así no entra se corta con
    "…" en vez de desbordar la foto. display:block (y no inline-flex) en
-   ese segmento para que funcione el text-overflow.
+   ese chip para que funcione el text-overflow.
 
    --badge-inset es la distancia a los bordes de la foto. Se define
    como variable local para poder bajarla en mobile desde
@@ -269,7 +266,7 @@
    de la ficha. No se toca .property-badge a secas: lo siguen usando la
    ficha, los modales y el skeleton.
 
-   pointer-events: none -> un toque sobre la cápsula llega al <Link> de
+   pointer-events: none -> un toque sobre los chips llega al <Link> de
    la foto y abre la propiedad, en vez de quedar en una zona muerta. */
 .property-badges {
   --badge-inset: var(--space-4);
@@ -278,10 +275,9 @@
   top: var(--badge-inset);
   left: var(--badge-inset);
   display: flex;
+  align-items: center;
+  gap: 6px;
   max-width: calc(100% - (var(--badge-inset) * 2));
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   pointer-events: none;
 }
 
@@ -289,23 +285,24 @@
 .property-badges .property-type-badge {
   position: static;
   display: block;
-  padding: 3px 11px;
-  border-radius: 0;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
   line-height: 16px;
   white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 .property-badges .property-badge {
   flex-shrink: 0;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: white;
 }
 
-/* Segmento de tipo. Para cambiarle el color, tocar sólo las dos líneas
-   de background-color / color. */
+/* Chip de tipo. Para cambiarle el color, tocar sólo las dos líneas de
+   background-color / color. */
 .property-badges .property-type-badge {
   min-width: 0;
   overflow: hidden;
@@ -314,7 +311,7 @@
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
-  background-color: rgba(255, 255, 255, 0.96);
+  background-color: rgba(255, 255, 255, 0.94);
   color: var(--color-text-primary);
 }
 
@@ -420,8 +417,8 @@
    ===================================================================
    La ubicación y el indicador "Destacada" van dentro de
    .property-content (debajo de la foto). El TIPO de propiedad ya no
-   va acá: pasó a la foto, pegado al badge de venta/alquiler en la misma
-   cápsula (ver .property-badges / .property-type-badge, más arriba).
+   va acá: pasó a la foto, al lado del badge de venta/alquiler (ver
+   .property-badges / .property-type-badge, más arriba).
    Reusa el design system existente (01-variables.css), sin tokens
    nuevos. */
 
