@@ -185,7 +185,7 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
             </ul>
             <div className="footer-social">
               {companyInfo.instagramUsername && (
-                
+                <a
                   href={`https://instagram.com/${companyInfo.instagramUsername}`}
                   className="social-link"
                   aria-label="Instagram"
