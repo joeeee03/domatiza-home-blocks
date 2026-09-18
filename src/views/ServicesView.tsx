@@ -19,24 +19,6 @@ const SERVICES = [
     alt: 'Calculadora y maqueta de casa sobre un escritorio, tasación de propiedades',
     title: 'Tasaciones',
   },
-  {
-    href: '/servicios#inversiones',
-    image: 'https://images.unsplash.com/photo-1759429084833-334282cbd58d?q=80&w=900&auto=format&fit=crop',
-    alt: 'Casas en miniatura junto a dinero, inversión inmobiliaria',
-    title: 'Inversiones Inmobiliarias',
-  },
-  {
-    href: '/servicios#comercial',
-    image: 'https://images.unsplash.com/photo-1551268587-2ce3185fea42?q=80&w=900&auto=format&fit=crop',
-    alt: 'Edificio de oficinas con fachada de vidrio, propiedad comercial',
-    title: 'Propiedades Comerciales',
-  },
-  {
-    href: '/servicios#proyectos',
-    image: 'https://images.unsplash.com/photo-1692101736757-579f547ec36a?q=80&w=900&auto=format&fit=crop',
-    alt: 'Grúas de construcción sobre un edificio en desarrollo',
-    title: 'Proyectos y Emprendimientos',
-  },
 ];
 
 export interface ServicesViewProps {
@@ -46,7 +28,7 @@ export interface ServicesViewProps {
 
 /**
  * Etapa 23 (opcional): extracción trivial — el contenido de esta
- * sección está 100% hardcodeado (mismas 6 tarjetas para cualquier
+ * sección está 100% hardcodeado (mismas 3 tarjetas para cualquier
  * tenant), así que la vista no recibe ninguna prop de datos, sólo la
  * capa de adaptación de host.
  */
@@ -75,12 +57,6 @@ export function ServicesView({ Link, Image }: ServicesViewProps) {
               </div>
             </Link>
           ))}
-        </div>
-
-        <div className="section-cta">
-          <Link href="/servicios" className="btn btn-secondary">
-            Ver todos los servicios
-          </Link>
         </div>
       </div>
     </section>

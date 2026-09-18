@@ -127,15 +127,6 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
                 <Link href="/tasar-propiedad">Tasaciones</Link>
               </li>
               <li>
-                <Link href="/servicios#inversiones">Inversiones</Link>
-              </li>
-              <li>
-                <Link href="/servicios#comercial">Comercial</Link>
-              </li>
-              <li>
-                <Link href="/servicios#proyectos">Proyectos</Link>
-              </li>
-              <li>
                 <Link href="/calculadora-alquiler">Calculadora de alquiler</Link>
               </li>
               <li>
@@ -194,7 +185,7 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
             </ul>
             <div className="footer-social">
               {companyInfo.instagramUsername && (
-                <a
+                
                   href={`https://instagram.com/${companyInfo.instagramUsername}`}
                   className="social-link"
                   aria-label="Instagram"

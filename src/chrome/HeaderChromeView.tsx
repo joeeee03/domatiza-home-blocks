@@ -32,7 +32,7 @@ import type { ChromeCompanyInfo } from './chromeTypes';
  *      (cualquier click igual queda absorbido por el
  *      `onClickCapture` de `IsolatedCanvas.tsx`, ver ese archivo).
  *
- * El desplegable de Servicios/Herramientas SÍ funciona (al pasar el
+ * El desplegable de Herramientas SÍ funciona (al pasar el
  * mouse) sin que este componente haga nada especial: `.nav-dropdown
  * :hover .dropdown-menu` en `06-header.css` es CSS puro, no depende
  * de ningún estado de React.
@@ -52,11 +52,6 @@ export interface HeaderChromeViewProps {
 }
 
 const MAIN_LINKS = [{ href: '/propiedades', label: 'Propiedades' }];
-const SERVICIOS_LINKS = [
-  { href: '/servicios#inversiones', label: 'Inversiones' },
-  { href: '/servicios#comercial', label: 'Comercial' },
-  { href: '/servicios#proyectos', label: 'Proyectos y Emprendimientos' },
-];
 const HERRAMIENTAS_LINKS = [
   { href: '/calculadora-alquiler', label: 'Calculadora de ajuste de alquiler' },
   { href: '/calculadora-credito-uva', label: 'Simulador de crédito UVA' },
@@ -99,20 +94,6 @@ export function HeaderChromeView({ companyInfo, Link, Image }: HeaderChromeViewP
                   </Link>
                 </li>
               ))}
-
-              <li className="nav-dropdown">
-                <Link href="/servicios" className="nav-link dropdown-toggle" aria-haspopup="true" aria-expanded={false}>
-                  Servicios
-                  <ChevronDown className="dropdown-icon" aria-hidden="true" size={16} />
-                </Link>
-                <ul className="dropdown-menu">
-                  {SERVICIOS_LINKS.map((link) => (
-                    <li key={link.href}>
-                      <Link href={link.href}>{link.label}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
 
               <li className="nav-dropdown">
                 <Link href="/herramientas" className="nav-link dropdown-toggle" aria-haspopup="true" aria-expanded={false}>
