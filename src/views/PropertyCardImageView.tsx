@@ -19,6 +19,16 @@ interface PropertyCardImageViewProps {
   href: string;
   badgeClass: string;
   badgeLabel: string;
+  /**
+   * Tipo de propiedad ya resuelto por el contenedor (ej. "Casa"). Se
+   * dibuja SOBRE la foto, al lado del badge de Venta/Alquiler, como un
+   * chip del mismo tamaño y de otro color (`.property-type-badge`, ver
+   * 12-featured.css). Opcional a propósito: sin este dato (hoy, el
+   * canvas del editor de ADMIN, que arma su propio
+   * `PropertyCardViewData` sin tipo) se renderiza sólo el badge de
+   * operación, igual que antes.
+   */
+  typeLabel?: string | null;
   Link: HostLinkComponent;
   Image: HostImageComponent;
   /**
@@ -116,6 +126,7 @@ export function PropertyCardImageView({
   href,
   badgeClass,
   badgeLabel,
+  typeLabel = null,
   Link,
   Image,
   priority = false,
@@ -365,7 +376,13 @@ export function PropertyCardImageView({
       onTouchEnd={handleTouchEnd}
       onMouseEnter={hasMultipleImages ? () => setNeighborsReady(true) : undefined}
     >
-      <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
+      {/* Badges sobre la foto: operación (Venta/Alquiler) + tipo de
+          propiedad, en fila y del mismo tamaño. Ver `.property-badges`
+          en 12-featured.css. */}
+      <div className="property-badges">
+        <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
+        {typeLabel && <span className="property-type-badge">{typeLabel}</span>}
+      </div>
       <Link
         href={href}
         className="property-image-link"

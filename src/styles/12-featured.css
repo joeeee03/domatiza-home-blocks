@@ -226,6 +226,82 @@
   background-color: var(--color-primary-600);
 }
 
+/* Badges sobre la foto: operación (Venta/Alquiler) + tipo de propiedad.
+
+   Antes el badge de operación era un <span> suelto con
+   `position: absolute` (.property-badge, arriba). Ahora los dos chips
+   viajan juntos dentro de este contenedor, que es el que se posiciona
+   sobre la esquina de la foto; adentro, los chips quedan en fila,
+   pegados uno al lado del otro, y ambos con EXACTAMENTE el mismo
+   tamaño (un escalón más chicos que el badge de antes: 11px en vez de
+   12px, menos padding) para que el conjunto ocupe poco lugar sobre la
+   imagen.
+
+   --badge-inset es la distancia a los bordes de la foto. Se define
+   como variable local para poder bajarla en mobile desde
+   23-responsive.css con una sola línea (antes se pisaban `top` y
+   `left` del badge suelto).
+
+   Los selectores van con el contenedor adelante
+   (.property-badges .property-badge) a propósito: en la ficha de
+   propiedad, 27-propiedad.css (sitio público) redefine .property-badge
+   con otro font-size/peso y, según el orden de carga, le podía ganar a
+   las reglas de arriba. Con dos clases en el selector el tamaño de
+   estos chips queda igual en el Home, en /propiedades y en las
+   "Propiedades similares" de la ficha. No se toca .property-badge a
+   secas: lo siguen usando la ficha, los modales y el skeleton.
+
+   pointer-events: none -> un toque sobre los chips llega al <Link> de
+   la foto y abre la propiedad, en vez de quedar en una zona muerta
+   (con dos chips la zona muerta sería el doble de ancha). */
+.property-badges {
+  --badge-inset: var(--space-4);
+  position: absolute;
+  z-index: 2;
+  top: var(--badge-inset);
+  left: var(--badge-inset);
+  right: var(--badge-inset);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.property-badges .property-badge,
+.property-badges .property-type-badge {
+  position: static;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.property-badges .property-badge {
+  flex-shrink: 0;
+  color: white;
+}
+
+/* Chip de tipo de propiedad. Fondo claro + texto oscuro a propósito:
+   se distingue del badge de Venta (terracota) y del de Alquiler (verde)
+   sin depender de la paleta de cada inmobiliaria, y se lee sobre
+   cualquier foto. Para cambiarle el color, tocar sólo estas dos líneas.
+   display:block (y no inline-flex) para que funcione el
+   text-overflow: si el tipo es largo ("Oficina / Consultorio") y la card
+   es angosta, se corta con "…" en vez de desbordar la foto. */
+.property-badges .property-type-badge {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: rgba(255, 255, 255, 0.94);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
 .property-content {
   padding: var(--space-6);
 }
@@ -243,19 +319,48 @@
   margin-bottom: var(--space-3);
 }
 
+/* BUGFIX (specs partidos en 2 líneas en mobile): con hasta 5 specs en
+   la misma fila ("100 m²" + "5 Amb." + "2 Dorm." + "1 Baño" + "3
+   Coch.") ya no alcanza con calcular a mano cuántos entran en cada
+   ancho de pantalla -- ese cálculo (ver el comentario que había en
+   23-responsive.css) se hizo en su momento para un máximo de 3 specs,
+   y quedó desactualizado apenas la card empezó a mostrar baños y
+   cochera además de ambientes/dormitorios. En vez de perseguir un
+   número mágico de specs por breakpoint (que además puede volver a
+   quedar corto el día que se agregue un spec más para algún tipo
+   nuevo), se resuelve de una vez: flex-wrap:nowrap fuerza una sola
+   fila SIEMPRE, y overflow-x:auto hace que, si algún combo de
+   specs+ancho de pantalla no entra igual, la fila se deslice
+   horizontalmente en vez de partirse en dos líneas o desbordar la
+   card. flex-shrink:0 en cada span (ver la regla de abajo) evita que
+   el texto se comprima/trunque en vez de scrollear. La scrollbar se
+   oculta (scrollbar-width/::-webkit-scrollbar) porque en la práctica,
+   con las labels abreviadas y los gaps ajustados por breakpoint (ver
+   23-responsive.css), casi nunca hace falta scrollear -- y cuando
+   hace falta, el swipe táctil ya es suficientemente descubrible sin
+   una barra visible ensuciando la card. */
 .property-specs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   gap: var(--space-4);
   margin-bottom: var(--space-4);
   font-size: 14px;
   color: var(--color-text-secondary);
 }
 
+.property-specs::-webkit-scrollbar {
+  display: none;
+}
+
 .property-specs span {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .property-specs-icon {
@@ -295,23 +400,20 @@
 }
 
 /* ===================================================================
-   TARJETAS-2 — tipo de propiedad + ubicación, e indicador "Destacada"
+   TARJETAS-2 — ubicación e indicador "Destacada"
    ===================================================================
-   Todo dentro de .property-content (debajo de la foto) a propósito:
-   sobre .property-image (la línea de arriba, ni acá ni en ningún otro
-   archivo de esta capa) no se agrega nada nuevo -- se mantiene
-   únicamente el badge de venta/alquiler que ya existe hoy, sin
-   acompañantes. Reusa el design system existente (01-variables.css),
-   ninguna variable nueva. */
+   La ubicación y el indicador "Destacada" van dentro de
+   .property-content (debajo de la foto). El TIPO de propiedad ya no
+   va acá: pasó a la foto, al lado del badge de venta/alquiler (ver
+   .property-badges / .property-type-badge, más arriba). Reusa el
+   design system existente (01-variables.css), sin tokens nuevos. */
 
-/* Línea nueva entre el título (h3) y .property-specs: tipo de
-   propiedad + ubicación juntos (ej. "Casa" + "San Nicolás de los
-   Arroyos"), cada uno con su propio ícono. Semánticamente aparte de
-   .property-specs (que son medidas/cantidades) -- esto es "qué es /
-   dónde está" -- así que va como bloque propio, no mezclado ahí
-   adentro. Sin separador visual tipo "·" en CSS: el ícono de cada
-   ítem ya cumple esa función, igual que ya hacen los spans de
-   .property-specs sin separadores entre ellos. */
+/* Línea entre el título (h3) y .property-specs: la ubicación (ej. "San
+   Nicolás de los Arroyos") con su ícono. Antes esta línea también
+   llevaba el tipo de propiedad; ahora ese va sobre la foto (ver
+   .property-badges). Semánticamente aparte de .property-specs (que son
+   medidas/cantidades) -- esto es "dónde está" -- así que va como
+   bloque propio, no mezclado ahí adentro. */
 .property-meta {
   display: flex;
   flex-wrap: wrap;
@@ -328,14 +430,13 @@
   gap: var(--space-1);
 }
 
-/* flex-wrap es importante acá: en una card angosta de mobile, un tipo
-   largo ("Oficina/Consultorio") + una localidad larga ("San Nicolás
-   de los Arroyos") no siempre entran en una sola línea -- con wrap, el
-   segundo ítem baja a una segunda línea en vez de cortarse o
-   desbordar la card. Los íconos de adentro de estos spans reusan
-   directamente la clase .property-specs-icon (16x16, ya definida
-   arriba en este mismo archivo) en vez de una clase nueva solo para
-   el tamaño, porque el criterio visual es el mismo. */
+/* flex-wrap se mantiene por si en algún momento esta línea vuelve a
+   llevar más de un ítem: en una card angosta de mobile, un texto largo
+   ("San Nicolás de los Arroyos") baja a una segunda línea en vez de
+   cortarse o desbordar la card. El ícono de adentro reusa directamente
+   la clase .property-specs-icon (16x16, ya definida arriba en este
+   mismo archivo) en vez de una clase nueva solo para el tamaño, porque
+   el criterio visual es el mismo. */
 
 /* Indicador inline de "Destacada", chico, pegado al precio (la
    capa que consuma esto -- PropertyCard.tsx / PropertyCardView.tsx --

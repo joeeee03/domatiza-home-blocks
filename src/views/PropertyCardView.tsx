@@ -42,7 +42,19 @@ export interface PropertyCardViewData {
   priceLabel: string;
   /** Ya formateado — ej. "120 m²" / "3 ha". */
   surfaceLabel: string;
-  /** `null` = el tipo de propiedad no usa este campo — no se renderiza el span, en vez de mostrar "0 amb". */
+  /**
+   * `null` = el tipo de propiedad no usa este campo — no se renderiza el span, en vez de mostrar "0 amb".
+   *
+   * BUGFIX (specs duplicados en el Home): para los tipos con ambientes/
+   * dormitorios, `specs` (ver más abajo) ya los incluye — abreviados
+   * ("Amb."/"Dorm.") y junto con baños/cochera, que estos dos campos
+   * nunca cubrieron. Cuando el contenedor manda ambas cosas (como hace
+   * hoy `FeaturedProperties.tsx` en PUBLIC), `rooms`/`bedrooms` quedan
+   * como fallback y el render los ignora (ver `cardSpecs.length === 0`
+   * más abajo) para no mostrar "Amb."/"Dorm." dos veces en la misma
+   * card. Sólo se siguen renderizando de verdad cuando el contenedor
+   * NO manda `specs` — hoy, el canvas del editor de ADMIN.
+   */
   rooms: number | null;
   bedrooms: number | null;
   /** `agent.whatsapp ?? agent.phone`, ya resuelto. `undefined` = sin botón de WhatsApp visible. */
@@ -69,7 +81,9 @@ export interface PropertyCardViewData {
    */
   locationLabel?: string | null;
   featured?: boolean;
+  /** Tipo de propiedad (ej. "Casa"). Se muestra como chip sobre la foto, al lado del badge de Venta/Alquiler (ya no debajo del título). */
   typeLabel?: string | null;
+  /** Ya no se renderiza (el chip de tipo sobre la foto es sólo texto). Se mantiene en la interfaz para no romper a los contenedores que todavía lo mandan (PUBLIC, `FeaturedProperties.tsx`). */
   typeIconName?: string | null;
   /** Specs compactos ya resueltos (ver `PropertyCardSpec` en format.ts de PUBLIC), mismo criterio de ícono-como-string. */
   specs?: Array<{ iconName: string; value: string; label: string }>;
@@ -159,7 +173,6 @@ export function PropertyCardView({
   // resueltos por el contenedor.
   const locationLabel = property.locationLabel ?? null;
   const typeLabel = property.typeLabel ?? null;
-  const TypeIcon = resolveIcon(property.typeIconName);
   const cardSpecs = property.specs ?? [];
 
   return (
@@ -170,6 +183,7 @@ export function PropertyCardView({
         href={propertyHref}
         badgeClass={badgeClass}
         badgeLabel={badgeLabel}
+        typeLabel={typeLabel}
         Link={Link}
         Image={Image}
         priority={index < priorityCards}
@@ -185,32 +199,28 @@ export function PropertyCardView({
           )}
         </div>
         <h3>{property.title}</h3>
-        {(typeLabel || locationLabel) && (
+        {locationLabel && (
           <div className="property-meta">
-            {typeLabel && (
-              <span>
-                <TypeIcon aria-hidden="true" size={16} className="property-specs-icon" />
-                {typeLabel}
-              </span>
-            )}
-            {locationLabel && (
-              <span>
-                <MapPin aria-hidden="true" size={16} className="property-specs-icon" />
-                {locationLabel}
-              </span>
-            )}
+            <span>
+              <MapPin aria-hidden="true" size={16} className="property-specs-icon" />
+              {locationLabel}
+            </span>
           </div>
         )}
         <div className="property-specs">
           <span>
             <Maximize aria-hidden="true" size={16} className="property-specs-icon" /> {property.surfaceLabel}
           </span>
-          {property.rooms != null && (
+          {/* BUGFIX: sólo se usa este fallback si el contenedor no mandó
+              `specs` (ver comentario en la interfaz, arriba) — si mandó
+              `specs`, ya viene con Amb./Dorm./Baños/Coch. incluidos y
+              renderizar esto también los duplicaba en pantalla. */}
+          {cardSpecs.length === 0 && property.rooms != null && (
             <span>
               <Layers aria-hidden="true" size={16} className="property-specs-icon" /> {property.rooms} amb
             </span>
           )}
-          {property.bedrooms != null && (
+          {cardSpecs.length === 0 && property.bedrooms != null && (
             <span>
               <Bed aria-hidden="true" size={16} className="property-specs-icon" /> {property.bedrooms} dorm
             </span>

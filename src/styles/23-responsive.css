@@ -282,56 +282,44 @@
     overflow: hidden;
   }
 
-  /* Badge "Venta"/"Alquiler": solo en /propiedades (properties-grid sin
-     el modificador --featured) se acerca un poco mas a la esquina en
+  /* Badges "Venta"/"Alquiler" + tipo de propiedad (.property-badges, ver
+     12-featured.css): solo en /propiedades (properties-grid sin el
+     modificador --featured) se acercan un poco mas a la esquina en
      mobile, bajando un escalon respecto al valor base (var(--space-4) en
      12-featured.css), en la misma proporcion en que .property-content de
      arriba ya baja un escalon respecto a su padding de escritorio. El Home
      ("Propiedades destacadas") queda afuera a proposito -- mismo patron de
-     exclusion que .property-image-nav-btn en 12-featured.css. */
-  .properties-grid:not(.properties-grid--featured) .property-badge {
-    top: var(--space-3);
-    left: var(--space-3);
+     exclusion que .property-image-nav-btn en 12-featured.css. Se cambia la
+     variable --badge-inset (que usan top/left/right del contenedor) en vez
+     de pisar top/left uno por uno. */
+  .properties-grid:not(.properties-grid--featured) .property-badges {
+    --badge-inset: var(--space-3);
   }
 }
 
 /* Zona intermedia (361-480px) — cubre la gran mayoria de telefonos reales
    en uso (iPhone SE/12/13 mini 375, iPhone 12/13/14 390, Android de gama
-   media/alta 360-412, iPhone Pro Max 428-430) que hasta ahora quedaba sin
-   ningun ajuste: `.property-specs` se mantenia en fila con el gap de
-   escritorio (var(--space-4) = 16px, heredado de 12-featured.css) desde
-   767px hasta aca, y recien pasaba a columna en @media (max-width: 374px)
-   (ver mas abajo) -- dejando este rango con el mismo gap de 16px pese al
-   ancho de card mucho menor.
+   media/alta 360-412, iPhone Pro Max 428-430).
 
-   Con hasta 3 specs ("120 m²" + "3 amb" + "2 dorm"), cada uno con icono de
-   16px + gap interno var(--space-1)=4px + texto de 14px, el ancho
-   combinado de los 3 textos+iconos ronda 210-230px. El ancho de contenido
-   disponible en este rango (descontando .container y el padding de
-   .property-content, ambos en su valor de mobile) ronda 300-370px, asi
-   que en teoria entran -- pero con el gap de 16px entre cada spec (32px
-   repartidos en 2 gaps) el total se acerca lo suficiente al limite como
-   para que, con specs un poco mas largos que el caso tipico (numeros de
-   mas digitos, "ha" en vez de "m²", etc.), el wrap natural de
-   flex-wrap:wrap deje al tercer item solo en una segunda linea -- un
-   wrap "desprolijo", no una columna intencional.
-
-   Se achica unicamente el gap (a var(--space-2) = 8px, la mitad) sin
-   tocar flex-direction: con solo 16px repartidos en los mismos 2 gaps
-   (en vez de 32px) los 3 specs quedan comodos en una sola fila con
-   margen de sobra, incluso en el extremo angosto de este rango (~300px
-   de ancho de contenido). Arranca en 361px porque el extremo inferior
-   (≤360px) sigue resolviendose forzando la columna completa, mas abajo
-   en este archivo -- ver ese bloque para el porque de ese breakpoint
-   puntual.
+   ACTUALIZADO: `.property-specs` ya no depende de que el cálculo de
+   "cuántos specs entran en cuántos px" quede siempre bien afinado —
+   desde 12-featured.css es flex-wrap:nowrap + overflow-x:auto, así que
+   una fila que no entra scrollea en vez de partirse en dos líneas (ver
+   el comentario de esa regla). Este bloque sólo AJUSTA el gap para que,
+   con hasta 5 specs ("100 m²" + "5 Amb." + "2 Dorm." + "1 Baño" + "3
+   Coch.") en vez de los 3 originales, la fila entre completa sin
+   necesidad de scrollear en la gran mayoría de los teléfonos reales de
+   este rango -- el scroll horizontal queda como red de seguridad para
+   el resto (specs con textos más largos que lo típico, tenants con
+   valores custom largos como "Rubro", etc.), no como comportamiento
+   esperado acá.
 
    `.property-specs` es una clase compartida entre el Home ("Propiedades
    destacadas", via PropertyCardView.tsx en el paquete home-blocks) y
    /propiedades (PropertyCard.tsx) sin ningun selector de exclusion --
    la regla base en 12-featured.css tampoco la lleva -- asi que esta
-   regla nueva sigue el mismo patron: sin
-   :not(.properties-grid--featured), el ajuste debe verse igual en
-   ambos lugares. */
+   regla sigue el mismo patron: sin :not(.properties-grid--featured), el
+   ajuste debe verse igual en ambos lugares. */
 @media (min-width: 361px) and (max-width: 480px) {
   .property-specs {
     gap: var(--space-2);
@@ -388,9 +376,8 @@
     padding: var(--space-3);
   }
 
-  .properties-grid:not(.properties-grid--featured) .property-badge {
-    top: var(--space-2);
-    left: var(--space-2);
+  .properties-grid:not(.properties-grid--featured) .property-badges {
+    --badge-inset: var(--space-2);
   }
 
   .property-actions {
@@ -402,27 +389,26 @@
   }
 }
 
-/* `.property-specs` en columna: antes vivia adentro del bloque de arriba
-   (@media max-width: 374px), junto con el resto de los ajustes "extra
-   small". Se le da su propio breakpoint, mas angosto (≤360px en vez de
-   ≤374px), porque medido el ancho de contenido real disponible en
-   361-374px (~305-315px, ver el bloque de 361-480px de mas arriba) los
-   3 specs entran comodos en una sola fila con el gap ya reducido a
-   var(--space-2) -- forzar la columna ahi era mas conservador de lo que
-   el espacio disponible requiere. Se deja la columna forzada solo para
-   el tramo realmente extremo (≤360px, ej. iPhone 5/SE de 1ra gen a
-   320px), donde el margen se achica lo suficiente como para no
-   arriesgarse con specs mas largos que el caso tipico. El resto de los
-   ajustes de la version original de "extra small" (container, h1/h2,
-   hero, badge, property-actions, etc.) se quedan sin cambios en su
-   breakpoint original de 374px, en el bloque de arriba -- solo se movio
-   esta regla puntual. Sin :not(.properties-grid--featured) por el mismo
-   motivo que el bloque de 361-480px: `.property-specs` es compartida
-   entre Home y /propiedades sin exclusion. */
+/* BUGFIX: esto forzaba flex-direction:column en pantallas ≤360px (ej.
+   iPhone 5/SE de 1ra gen, 320px) -- es decir, apilaba cada spec en su
+   propia línea. Con 3 specs como máximo eso ya se veía raro; con hasta
+   5 (ver 12-featured.css) apilaba las 5, una card mucho más alta de lo
+   necesario, y encima segun el pedido puntual de este ajuste, ninguna
+   pantalla debería mostrar los specs partidos en más de una fila.
+
+   Se saca la columna: `.property-specs` sigue en una sola fila (nowrap,
+   heredado de 12-featured.css) también en este extremo, sólo se le baja
+   un escalón más el gap y el tamaño de fuente para ganar el aire que
+   haga falta -- si con eso no alcanza para algún combo puntual de specs
+   muy largos, la fila scrollea horizontalmente en vez de romper el
+   layout (ver, otra vez, el comentario de 12-featured.css). Sin
+   :not(.properties-grid--featured) por el mismo motivo que el bloque de
+   361-480px de arriba: `.property-specs` es compartida entre Home y
+   /propiedades sin exclusion. */
 @media (max-width: 360px) {
   .property-specs {
-    flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1);
+    font-size: 13px;
   }
 }
 
@@ -443,4 +429,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
+} 
