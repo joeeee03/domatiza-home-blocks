@@ -65,7 +65,7 @@ export function HeroView({ title, subtitle, imageUrl, Link, propertyTypes, locat
 
           <div className="hero-cta">
             <Link href="/tasar-propiedad" className="btn btn-tertiary">
-              Tasá tu propiedad gratis
+              Tasá tu propiedad
             </Link>
           </div>
         </div>
