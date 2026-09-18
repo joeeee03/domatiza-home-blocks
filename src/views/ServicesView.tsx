@@ -58,6 +58,12 @@ export function ServicesView({ Link, Image }: ServicesViewProps) {
             </Link>
           ))}
         </div>
+
+        <div className="section-cta">
+          <Link href="/servicios" className="btn btn-secondary">
+            Ver todos los servicios
+          </Link>
+        </div>
       </div>
     </section>
   );
