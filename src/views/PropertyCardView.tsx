@@ -1,4 +1,32 @@
-import { Layers, MessageCircle, Bed, Maximize } from 'lucide-react';
+import {
+  Layers,
+  MessageCircle,
+  Bed,
+  Maximize,
+  Home,
+  Trees,
+  Building2,
+  Building,
+  Store,
+  Briefcase,
+  Map,
+  Tractor,
+  Warehouse,
+  Car,
+  ShoppingCart,
+  Landmark,
+  Tag,
+  Bath,
+  Ruler,
+  Sprout,
+  Zap,
+  Umbrella,
+  Key,
+  Star,
+  DollarSign,
+  MapPin,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { HostLinkComponent, HostImageComponent } from '../host/hostTypes';
 import { whatsappLink } from '../lib/whatsappLink';
 import { PropertyCardImageView } from './PropertyCardImageView';
@@ -19,6 +47,32 @@ export interface PropertyCardViewData {
   bedrooms: number | null;
   /** `agent.whatsapp ?? agent.phone`, ya resuelto. `undefined` = sin botón de WhatsApp visible. */
   whatsappNumber: string | undefined;
+  /**
+   * TARJETAS-4 — tipo + ubicación de la propiedad, ya resueltos por el
+   * contenedor (mismo criterio que priceLabel/surfaceLabel: esta vista
+   * no decide type→label ni type→ícono, sólo confía en lo que le
+   * pasan). `typeIconName` viaja como STRING (nombre de componente
+   * lucide-react, ej. "Home") en vez de componente ya resuelto porque
+   * esta interfaz vive en un paquete compartido — se resuelve acá
+   * abajo con un Record local (ver `ICON_MAP`).
+   *
+   * OPCIONALES A PROPÓSITO: el canvas del editor de páginas del ADMIN
+   * (`fetchFeaturedPropertiesForCanvas()`, `publicSectionsApi.ts`)
+   * arma su propio `PropertyCardViewData` con una query aparte a
+   * Supabase, en otro repo que no puede importar nada de PUBLIC. Si
+   * estos campos fueran obligatorios, el build de ADMIN se rompería
+   * apenas actualizara su copia de este paquete, sin que esta capa
+   * haya tocado una sola línea de ADMIN. Con `?`, ADMIN sigue
+   * compilando tal cual está: el canvas simplemente no muestra
+   * todavía tipo/ubicación/specs/"Destacada" (queda para cuando
+   * alguien actualice ese fetcher — fuera de alcance acá).
+   */
+  locationLabel?: string | null;
+  featured?: boolean;
+  typeLabel?: string | null;
+  typeIconName?: string | null;
+  /** Specs compactos ya resueltos (ver `PropertyCardSpec` en format.ts de PUBLIC), mismo criterio de ícono-como-string. */
+  specs?: Array<{ iconName: string; value: string; label: string }>;
 }
 
 export interface PropertyCardViewProps {
@@ -48,6 +102,47 @@ export interface PropertyCardViewProps {
   priorityCards?: number;
 }
 
+/**
+ * TARJETAS-4 — resuelve un nombre de ícono lucide-react (string, ej.
+ * "Home", "Bath", "MapPin") al componente real. Cubre tanto el
+ * vocabulario de `typeIconName` (13 tipos + fallback "Tag") como el de
+ * `specs[].iconName` (ver `SPEC_ICON_LUCIDE_NAMES` en el format.ts de
+ * PUBLIC) — mismos 24 nombres en total, un solo Record para no
+ * mantener dos mapas. Fallback `Tag` para cualquier nombre
+ * desconocido/null, igual que el resto de esta capa.
+ */
+const ICON_MAP: Record<string, LucideIcon> = {
+  Home,
+  Trees,
+  Building2,
+  Building,
+  Store,
+  Briefcase,
+  Map,
+  Tractor,
+  Warehouse,
+  Car,
+  ShoppingCart,
+  Bed,
+  Landmark,
+  Tag,
+  Maximize,
+  Layers,
+  Bath,
+  Ruler,
+  Sprout,
+  Zap,
+  Umbrella,
+  Key,
+  Star,
+  DollarSign,
+};
+
+function resolveIcon(name: string | null | undefined): LucideIcon {
+  if (!name) return Tag;
+  return ICON_MAP[name] ?? Tag;
+}
+
 export function PropertyCardView({
   property,
   index = 0,
@@ -59,6 +154,13 @@ export function PropertyCardView({
   const badgeLabel = property.operation === 'venta' ? 'Venta' : 'Alquiler';
   const waMessage = `Hola, quiero más información sobre "${property.title}"`;
   const propertyHref = `/propiedades/${property.slug}`;
+
+  // TARJETAS-4 — mismos datos que PropertyCard.tsx (PUBLIC), ya
+  // resueltos por el contenedor.
+  const locationLabel = property.locationLabel ?? null;
+  const typeLabel = property.typeLabel ?? null;
+  const TypeIcon = resolveIcon(property.typeIconName);
+  const cardSpecs = property.specs ?? [];
 
   return (
     <PropertyCardRevealView propertyId={property.id} index={index}>
@@ -73,8 +175,32 @@ export function PropertyCardView({
         priority={index < priorityCards}
       />
       <div className="property-content">
-        <div className="property-price">{property.priceLabel}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="property-price">{property.priceLabel}</div>
+          {property.featured && (
+            <span className="property-featured-tag">
+              <Star aria-hidden="true" size={14} fill="currentColor" />
+              Destacada
+            </span>
+          )}
+        </div>
         <h3>{property.title}</h3>
+        {(typeLabel || locationLabel) && (
+          <div className="property-meta">
+            {typeLabel && (
+              <span>
+                <TypeIcon aria-hidden="true" size={16} className="property-specs-icon" />
+                {typeLabel}
+              </span>
+            )}
+            {locationLabel && (
+              <span>
+                <MapPin aria-hidden="true" size={16} className="property-specs-icon" />
+                {locationLabel}
+              </span>
+            )}
+          </div>
+        )}
         <div className="property-specs">
           <span>
             <Maximize aria-hidden="true" size={16} className="property-specs-icon" /> {property.surfaceLabel}
@@ -89,6 +215,14 @@ export function PropertyCardView({
               <Bed aria-hidden="true" size={16} className="property-specs-icon" /> {property.bedrooms} dorm
             </span>
           )}
+          {cardSpecs.map((spec) => {
+            const SpecIcon = resolveIcon(spec.iconName);
+            return (
+              <span key={spec.label}>
+                <SpecIcon aria-hidden="true" size={16} className="property-specs-icon" /> {spec.value} {spec.label}
+              </span>
+            );
+          })}
         </div>
         <div className="property-actions">
           <Link href={propertyHref} className="btn btn-secondary btn-sm">
