@@ -226,16 +226,34 @@
   background-color: var(--color-primary-600);
 }
 
-/* Badges sobre la foto: operación (Venta/Alquiler) + tipo de propiedad.
+/* Badges sobre la foto: UNA sola cápsula con la operación
+   (Venta/Alquiler) a la izquierda y el tipo de propiedad a la derecha.
 
    Antes el badge de operación era un <span> suelto con
-   `position: absolute` (.property-badge, arriba). Ahora los dos chips
-   viajan juntos dentro de este contenedor, que es el que se posiciona
-   sobre la esquina de la foto; adentro, los chips quedan en fila,
-   pegados uno al lado del otro, y ambos con EXACTAMENTE el mismo
-   tamaño (un escalón más chicos que el badge de antes: 11px en vez de
-   12px, menos padding) para que el conjunto ocupe poco lugar sobre la
-   imagen.
+   `position: absolute` (.property-badge, arriba). Ahora los dos
+   segmentos viajan juntos dentro de este contenedor, que es el que se
+   posiciona sobre la esquina de la foto y el que aporta la forma de
+   píldora (border-radius + overflow:hidden), la sombra y el tope de
+   ancho. Cada segmento es un rectángulo plano de 22px de alto; el
+   redondeo lo pone el contenedor al recortarlos, así que si no hay
+   tipo, el badge de operación solo también queda como píldora
+   completa.
+
+   - Operación: color de marca (.badge-sale / .badge-rent), mayúsculas
+     de 11px -- un escalón menos que el badge de antes (12px).
+   - Tipo: fondo blanco y texto oscuro (se distingue de Venta
+     -terracota- y de Alquiler -verde- sin depender de la paleta de
+     cada inmobiliaria, y se lee sobre cualquier foto). Inicial
+     mayúscula y resto en minúsculas ("Oficina/consultorio"; el texto
+     ya llega así desde el componente, ver formatTypeChipLabel), sin
+     letter-spacing: un tipo largo ocupa bastante menos ancho que en
+     mayúsculas.
+
+   TIPO LARGO: la cápsula nunca pasa del ancho de la foto menos el
+   margen (max-width). El segmento de operación no se achica
+   (flex-shrink: 0); el de tipo sí, y si aun así no entra se corta con
+   "…" en vez de desbordar la foto. display:block (y no inline-flex) en
+   ese segmento para que funcione el text-overflow.
 
    --badge-inset es la distancia a los bordes de la foto. Se define
    como variable local para poder bajarla en mobile desde
@@ -246,60 +264,58 @@
    (.property-badges .property-badge) a propósito: en la ficha de
    propiedad, 27-propiedad.css (sitio público) redefine .property-badge
    con otro font-size/peso y, según el orden de carga, le podía ganar a
-   las reglas de arriba. Con dos clases en el selector el tamaño de
-   estos chips queda igual en el Home, en /propiedades y en las
-   "Propiedades similares" de la ficha. No se toca .property-badge a
-   secas: lo siguen usando la ficha, los modales y el skeleton.
+   las reglas de arriba. Con dos clases en el selector el aspecto queda
+   igual en el Home, en /propiedades y en las "Propiedades similares"
+   de la ficha. No se toca .property-badge a secas: lo siguen usando la
+   ficha, los modales y el skeleton.
 
-   pointer-events: none -> un toque sobre los chips llega al <Link> de
-   la foto y abre la propiedad, en vez de quedar en una zona muerta
-   (con dos chips la zona muerta sería el doble de ancha). */
+   pointer-events: none -> un toque sobre la cápsula llega al <Link> de
+   la foto y abre la propiedad, en vez de quedar en una zona muerta. */
 .property-badges {
   --badge-inset: var(--space-4);
   position: absolute;
   z-index: 2;
   top: var(--badge-inset);
   left: var(--badge-inset);
-  right: var(--badge-inset);
   display: flex;
-  align-items: center;
-  gap: 6px;
+  max-width: calc(100% - (var(--badge-inset) * 2));
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   pointer-events: none;
 }
 
 .property-badges .property-badge,
 .property-badges .property-type-badge {
   position: static;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  display: block;
+  padding: 3px 11px;
+  border-radius: 0;
+  line-height: 16px;
   white-space: nowrap;
 }
 
 .property-badges .property-badge {
   flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   color: white;
 }
 
-/* Chip de tipo de propiedad. Fondo claro + texto oscuro a propósito:
-   se distingue del badge de Venta (terracota) y del de Alquiler (verde)
-   sin depender de la paleta de cada inmobiliaria, y se lee sobre
-   cualquier foto. Para cambiarle el color, tocar sólo estas dos líneas.
-   display:block (y no inline-flex) para que funcione el
-   text-overflow: si el tipo es largo ("Oficina / Consultorio") y la card
-   es angosta, se corta con "…" en vez de desbordar la foto. */
+/* Segmento de tipo. Para cambiarle el color, tocar sólo las dos líneas
+   de background-color / color. */
 .property-badges .property-type-badge {
-  display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  background-color: rgba(255, 255, 255, 0.94);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  background-color: rgba(255, 255, 255, 0.96);
   color: var(--color-text-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 .property-content {
@@ -404,9 +420,10 @@
    ===================================================================
    La ubicación y el indicador "Destacada" van dentro de
    .property-content (debajo de la foto). El TIPO de propiedad ya no
-   va acá: pasó a la foto, al lado del badge de venta/alquiler (ver
-   .property-badges / .property-type-badge, más arriba). Reusa el
-   design system existente (01-variables.css), sin tokens nuevos. */
+   va acá: pasó a la foto, pegado al badge de venta/alquiler en la misma
+   cápsula (ver .property-badges / .property-type-badge, más arriba).
+   Reusa el design system existente (01-variables.css), sin tokens
+   nuevos. */
 
 /* Línea entre el título (h3) y .property-specs: la ubicación (ej. "San
    Nicolás de los Arroyos") con su ícono. Antes esta línea también

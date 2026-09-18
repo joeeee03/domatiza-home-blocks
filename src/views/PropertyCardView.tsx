@@ -81,9 +81,9 @@ export interface PropertyCardViewData {
    */
   locationLabel?: string | null;
   featured?: boolean;
-  /** Tipo de propiedad (ej. "Casa"). Se muestra como chip sobre la foto, al lado del badge de Venta/Alquiler (ya no debajo del título). */
+  /** Tipo de propiedad (ej. "Casa"). Se muestra sobre la foto, pegado al badge de Venta/Alquiler en la misma cápsula (ya no debajo del título). */
   typeLabel?: string | null;
-  /** Ya no se renderiza (el chip de tipo sobre la foto es sólo texto). Se mantiene en la interfaz para no romper a los contenedores que todavía lo mandan (PUBLIC, `FeaturedProperties.tsx`). */
+  /** Ya no se renderiza (el tipo sobre la foto es sólo texto). Se mantiene en la interfaz para no romper a los contenedores que todavía lo mandan (PUBLIC, `FeaturedProperties.tsx`). */
   typeIconName?: string | null;
   /** Specs compactos ya resueltos (ver `PropertyCardSpec` en format.ts de PUBLIC), mismo criterio de ícono-como-string. */
   specs?: Array<{ iconName: string; value: string; label: string }>;

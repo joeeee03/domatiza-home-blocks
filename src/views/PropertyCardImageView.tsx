@@ -21,10 +21,11 @@ interface PropertyCardImageViewProps {
   badgeLabel: string;
   /**
    * Tipo de propiedad ya resuelto por el contenedor (ej. "Casa"). Se
-   * dibuja SOBRE la foto, al lado del badge de Venta/Alquiler, como un
-   * chip del mismo tamaño y de otro color (`.property-type-badge`, ver
-   * 12-featured.css). Opcional a propósito: sin este dato (hoy, el
-   * canvas del editor de ADMIN, que arma su propio
+   * dibuja SOBRE la foto, pegado al badge de Venta/Alquiler dentro de
+   * una misma cápsula (`.property-badges` / `.property-type-badge`, ver
+   * 12-featured.css), con inicial mayúscula y el resto en minúsculas
+   * (ver `formatTypeChipLabel`). Opcional a propósito: sin este dato
+   * (hoy, el canvas del editor de ADMIN, que arma su propio
    * `PropertyCardViewData` sin tipo) se renderiza sólo el badge de
    * operación, igual que antes.
    */
@@ -58,6 +59,19 @@ const SWIPE_VELOCITY_THRESHOLD = 0.5; // px/ms — flick corto y rápido
 const MIN_FLICK_DISTANCE = 12; // evita que un tap tembloroso cuente como flick
 const TRANSITION_MS = 190;
 const TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+/**
+ * Texto del chip de tipo de propiedad: inicial mayúscula y el resto en
+ * minúsculas ("Oficina/consultorio"), venga como venga escrito. Las
+ * siglas de hasta 3 letras ("PH") se dejan tal cual: en minúsculas
+ * quedarían mal ("Ph"). Misma función que en `PropertyCardImage`
+ * (repo PUBLIC).
+ */
+function formatTypeChipLabel(label: string): string {
+  const text = label.trim();
+  if (text.length <= 3 && text === text.toUpperCase()) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
 
 const SLIDE_BASE_STYLE: CSSProperties = {
   position: 'relative',
@@ -376,12 +390,12 @@ export function PropertyCardImageView({
       onTouchEnd={handleTouchEnd}
       onMouseEnter={hasMultipleImages ? () => setNeighborsReady(true) : undefined}
     >
-      {/* Badges sobre la foto: operación (Venta/Alquiler) + tipo de
-          propiedad, en fila y del mismo tamaño. Ver `.property-badges`
-          en 12-featured.css. */}
+      {/* Badges sobre la foto: una sola cápsula con la operación
+          (Venta/Alquiler) a la izquierda y el tipo de propiedad a la
+          derecha. Ver `.property-badges` en 12-featured.css. */}
       <div className="property-badges">
         <span className={`property-badge ${badgeClass}`}>{badgeLabel}</span>
-        {typeLabel && <span className="property-type-badge">{typeLabel}</span>}
+        {typeLabel && <span className="property-type-badge">{formatTypeChipLabel(typeLabel)}</span>}
       </div>
       <Link
         href={href}

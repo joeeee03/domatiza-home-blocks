@@ -290,8 +290,8 @@
      arriba ya baja un escalon respecto a su padding de escritorio. El Home
      ("Propiedades destacadas") queda afuera a proposito -- mismo patron de
      exclusion que .property-image-nav-btn en 12-featured.css. Se cambia la
-     variable --badge-inset (que usan top/left/right del contenedor) en vez
-     de pisar top/left uno por uno. */
+     variable --badge-inset (que usan top, left y max-width del contenedor)
+     en vez de pisar top/left uno por uno. */
   .properties-grid:not(.properties-grid--featured) .property-badges {
     --badge-inset: var(--space-3);
   }
@@ -429,4 +429,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}  
+}
