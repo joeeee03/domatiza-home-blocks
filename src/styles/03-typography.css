@@ -10,10 +10,23 @@ h1, h2, h3, h4 {
      espacios) ahora hace salto de línea en vez de desbordar su
      contenedor — sin esto, `section.hero { overflow: hidden }` lo
      recortaba en silencio (texto invisible) en vez de mostrarlo
-     completo en varias líneas. */
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  hyphens: auto;
+     completo en varias líneas.
+
+     `overflow-wrap: break-word` (no `anywhere`) sólo rompe una
+     palabra cuando es la ÚNICA forma de que entre (ej. una URL larga
+     sin espacios) — el texto normal sigue rompiendo por los espacios
+     entre palabras, nunca a mitad de palabra sin necesidad.
+     `word-break: normal` es explícito a propósito: el valor legacy
+     `break-word` de esa propiedad se comporta como
+     `overflow-wrap: anywhere` sin importar lo que diga overflow-wrap,
+     rompiendo agresivamente incluso cuando la palabra completa
+     entraría bajando a la siguiente línea (esto era lo que causaba
+     los cortes feos tipo "esp-ero"). `hyphens: manual` (el valor por
+     default) evita que el navegador inserte un guión automático a
+     mitad de palabra al saltar de línea. */
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
 }
 
 h1 {
@@ -39,8 +52,10 @@ h4 {
 
 p {
   margin-bottom: var(--space-4);
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  /* Mismo criterio que h1-h4 arriba: rompe una palabra sólo si no
+     entra de ninguna otra forma, nunca a mitad de palabra porque sí. */
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .section-eyebrow {
