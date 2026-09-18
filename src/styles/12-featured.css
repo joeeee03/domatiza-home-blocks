@@ -452,19 +452,61 @@
    mismo archivo) en vez de una clase nueva solo para el tamaño, porque
    el criterio visual es el mismo. */
 
-/* Indicador inline de "Destacada", chico, pegado al precio (la
-   capa que consuma esto -- PropertyCard.tsx / PropertyCardView.tsx --
-   decide el layout exacto para ubicarlo junto a .property-price).
-   IMPORTANTE: el ícono Star debe ir con fill="currentColor" en el
-   JSX para que se vea "relleno" como una estrella real, no solo el
-   contorno -- si se omite ese prop, el ícono se ve hueco y no matchea
-   el resto de los usos de Star (ej. "Categoría" de hotel en
-   getPropertySpecs). */
+/* REDISEÑO VISUAL: antes era texto suelto sin fondo (sin padding, sin
+   borde) -- al lado del precio (font-display, 22px, bold) se perdía,
+   se leía como una etiqueta de accesibilidad más que como un
+   indicador de valor. Pasa a ser un chip/pill redondeado (mismo
+   --radius-full que .property-badge / .property-type-badge, así se ve
+   coherente con el resto de la card), en la paleta "Ocre Pampeano" ya
+   existente en 01-variables.css -- sin tokens nuevos:
+
+   - Fondo: degradé sutil de --color-accent-100 (crema) a blanco, para
+     que no compita con el chip de tipo (fondo blanco liso, sobre la
+     foto) ni con .property-price, y darle una textura más "premium"
+     que un color plano.
+   - Texto: --color-secondary-700 (terracota oscuro), no
+     --color-accent-600 -- el ocre de marca sobre --color-accent-100 da
+     ~2:1 de contraste (ilegible, ver auditoría); --color-secondary-700
+     sobre ese mismo fondo da ~7.9:1 (AAA). Además conecta la cápsula
+     con .property-price, que ya usa la familia terracota
+     (--color-secondary-600).
+   - Ícono: el SELECTOR DE ABAJO (.property-featured-tag svg) le fija
+     su propio color (--color-accent-600, el ocre) en vez de heredar
+     currentColor del texto -- así la estrella queda dorada y el texto
+     terracota, dos tonos de marca en la misma cápsula en vez de un
+     único color plano. El fill="currentColor" que ya trae el JSX
+     (Star) sigue funcionando igual: currentColor se resuelve contra
+     el color QUE TENGA EL PROPIO <svg>, no el heredado del padre, así
+     que esta regla más específica alcanza sin tocar el componente.
+   - border + box-shadow chicos, ambos con el mismo tono ocre en baja
+     opacidad, para separar el chip del fondo de la card sin un borde
+     duro.
+
+   flex-shrink:0 porque este chip convive con .property-price en una
+   fila flex (justify-content:space-between, ver el div contenedor en
+   PropertyCard.tsx / PropertyCardView.tsx): en una card angosta de
+   mobile con un precio largo, no debe comprimirse ni partir su texto
+   en dos líneas. white-space:nowrap por el mismo motivo. */
 .property-featured-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 5px 12px 5px 9px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-accent-100) 0%, #FFFFFF 100%);
+  border: 1px solid rgba(214, 164, 41, 0.35);
+  box-shadow: 0 1px 3px rgba(214, 164, 41, 0.25);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--color-secondary-700);
+  white-space: nowrap;
+}
+
+/* Estrella en dorado de marca, aparte del texto terracota -- ver
+   explicación completa en el comentario de arriba. */
+.property-featured-tag svg {
   color: var(--color-accent-600);
+  flex-shrink: 0;
 }
