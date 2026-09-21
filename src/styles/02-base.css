@@ -7,9 +7,19 @@
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* `scroll-behavior: smooth` en `html` se sacó (Sep 2026): el scroll
+   suave a anclas (`href="#..."`) ya lo hace a mano, con offset de
+   header, el listener global de `ScrollAnimations.tsx`
+   (`handleAnchorClick`, `window.scrollTo({ behavior: "smooth" })`) —
+   esta regla CSS no aportaba nada ahí. Lo único que hacía en la
+   práctica era interceptar el salto al tope de página que dispara
+   Next.js en cada cambio de ruta (`<Link>` a otra página) y volverlo
+   una animación: eso era el "desliz hacia abajo" al clickear
+   cualquier botón que navega a otra página, en mobile y en desktop
+   por igual. Sacando la regla, la navegación entre páginas vuelve a
+   ser un salto instantáneo (comportamiento nativo del navegador /
+   Next.js) y el scroll a anclas dentro de la misma página sigue
+   siendo suave porque ya no depende de esto. */
 
 /* Animación de loading spinner */
 @keyframes spin {
