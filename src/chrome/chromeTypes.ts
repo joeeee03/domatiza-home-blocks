@@ -41,7 +41,6 @@ export interface HorarioRango {
 export interface ChromeCompanyInfo {
   companyName: string;
   tagline: string | null;
-  colegioMatricula: string | null;
   phone: string | null;
   whatsapp: string | null;
   email: string | null;

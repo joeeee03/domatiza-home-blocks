@@ -213,7 +213,6 @@ export function FooterChromeView({ companyInfo, Link, Image }: FooterChromeViewP
         <div className="footer-bottom">
           <p>
             © {new Date().getFullYear()} {companyInfo.companyName}. Todos los derechos reservados.
-            {companyInfo.colegioMatricula && ` Corredores matriculados en ${companyInfo.colegioMatricula}.`}
           </p>
         </div>
       </div>
