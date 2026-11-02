@@ -7,12 +7,13 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type DragEvent as ReactDragEvent,
   type ElementType,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react';
-import { Copy, Pencil, Plus, Settings, Star, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Plus, Settings, Star, Trash2, Upload } from 'lucide-react';
 import { useHomeBlocksEditor } from './EditorContext';
 import { resolveIcon } from '../icons/resolveIcon';
 import { searchIcons } from './curatedIconNames';
@@ -547,6 +548,83 @@ function EditableImageAreaOverlay({ label, onDelete }: EditableImageAreaOverlayP
 }
 
 /* =========================================================================
+ * Arrastrar y soltar una foto encima de una imagen editable — sólo si
+ * quien arma el Provider pasó `onImageDrop` (el admin). Mientras se
+ * arrastra un archivo por encima, se muestra un aviso "Soltá la imagen
+ * acá" (`.hb-drop-overlay`, estilos del lado del admin). El contador de
+ * `dragenter`/`dragleave` evita el parpadeo al pasar por encima de los
+ * hijos del elemento (cada hijo dispara su propio par de eventos).
+ * Sin `onImageDrop` (o sin Provider, como en el sitio público) no se
+ * registra nada.
+ * =======================================================================*/
+
+function isFileDrag(event: ReactDragEvent): boolean {
+  return Array.from(event.dataTransfer?.types ?? []).includes('Files');
+}
+
+function useImageDrop(fieldPath: string, onDrop: ((fieldPath: string, file: File) => void) | undefined) {
+  const [dragActive, setDragActive] = useState(false);
+  const depthRef = useRef(0);
+
+  if (!onDrop) return { dragActive: false, dropHandlers: {} };
+
+  const dropHandlers = {
+    onDragEnter: (event: ReactDragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      depthRef.current += 1;
+      setDragActive(true);
+    },
+    onDragOver: (event: ReactDragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'copy';
+    },
+    onDragLeave: (event: ReactDragEvent) => {
+      if (!isFileDrag(event)) return;
+      depthRef.current = Math.max(0, depthRef.current - 1);
+      if (depthRef.current === 0) setDragActive(false);
+    },
+    onDrop: (event: ReactDragEvent) => {
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      depthRef.current = 0;
+      setDragActive(false);
+      const file = event.dataTransfer.files?.[0];
+      if (file) onDrop(fieldPath, file);
+    },
+  };
+  return { dragActive, dropHandlers };
+}
+
+function ImageDropOverlay({ compact, area }: { compact?: boolean; area?: boolean }) {
+  return (
+    <span
+      data-hb-overlay="true"
+      className={`hb-drop-overlay${compact ? ' hb-drop-overlay-compact' : ''}${area ? ' hb-drop-overlay-area' : ''}`}
+      contentEditable={false}
+    >
+      <span className="hb-drop-overlay-pill">
+        <Upload aria-hidden="true" />
+        {!compact && <span>Soltá la imagen para usarla</span>}
+      </span>
+    </span>
+  );
+}
+
+/** Enter/Espacio sobre una imagen con foco de teclado abre lo mismo que el click. */
+function imageKeyDown(open: () => void) {
+  return (event: ReactKeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      open();
+    }
+  };
+}
+
+/* =========================================================================
  * EditableImageArea — para una imagen que viaja como `background` CSS
  * inline sobre un `<div>` ya existente (el fondo del Hero) — el `<div>`
  * en sí es el target, sin ningún wrapper nuevo.
@@ -594,6 +672,7 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
    */
   const [touchActive, setTouchActive] = useState(false);
   const areaRef = useRef<HTMLElement | null>(null);
+  const { dragActive, dropHandlers } = useImageDrop(fieldPath, editor && editor.canEditField(fieldPath) ? editor.onImageDrop : undefined);
 
   useEffect(() => {
     if (!touchActive) return;
@@ -625,6 +704,8 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
       onMouseLeave={() => setHovered(false)}
       onFocus={() => canEdit && setFocused(true)}
       onBlur={() => setFocused(false)}
+      onKeyDown={canEdit ? imageKeyDown(() => editor.onImageRequest(fieldPath)) : undefined}
+      {...dropHandlers}
       onClick={
         canEdit
           ? (e: ReactMouseEvent) => {
@@ -644,7 +725,8 @@ export function EditableImageArea({ as, fieldPath, label, className, style, hasI
           abriendo sólo con click/tap, no se agregó activación por
           teclado (Enter/Espacio) para no decidir unilateralmente ese
           alcance — eso sigue NO VERIFICADO, es un problema aparte. */}
-      {canEdit && (hovered || focused || touchActive) && (
+      {canEdit && dragActive && <ImageDropOverlay area />}
+      {canEdit && !dragActive && (hovered || focused || touchActive) && (
         <EditableImageAreaOverlay
           label={label}
           onDelete={hasImage && editor.onImageRemove ? () => editor.onImageRemove!(fieldPath) : undefined}
@@ -701,6 +783,7 @@ export function EditableImageSlot({
    */
   const [touchActive, setTouchActive] = useState(false);
   const slotRef = useRef<HTMLElement | null>(null);
+  const { dragActive, dropHandlers } = useImageDrop(fieldPath, editor && editor.canEditField(fieldPath) ? editor.onImageDrop : undefined);
 
   useEffect(() => {
     if (!touchActive) return;
@@ -730,6 +813,8 @@ export function EditableImageSlot({
       onMouseLeave={() => setHovered(false)}
       onFocus={() => canEdit && setFocused(true)}
       onBlur={() => setFocused(false)}
+      onKeyDown={canEdit ? imageKeyDown(() => editor.onImageRequest(fieldPath)) : undefined}
+      {...dropHandlers}
       onClick={
         canEdit
           ? (e: ReactMouseEvent) => {
@@ -746,7 +831,8 @@ export function EditableImageSlot({
           sólo con click/tap, no se agregó activación por teclado
           (Enter/Espacio) para no decidir unilateralmente ese alcance —
           eso sigue NO VERIFICADO, es un problema aparte. */}
-      {canEdit && (hovered || focused || touchActive) && (
+      {canEdit && dragActive && <ImageDropOverlay compact={compact} />}
+      {canEdit && !dragActive && (hovered || focused || touchActive) && (
         <EditableImageOverlay
           label={label}
           hasImage={hasImage}
@@ -1042,6 +1128,16 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
   }
 
   const canEdit = editor.canEditField(fieldPath);
+  // Si el admin trae su propio selector (ventana grande, en español), se usa ése;
+  // si no, el popover chico de siempre.
+  const openPicker = () => {
+    if (editor.onIconRequest) {
+      setHovered(false);
+      editor.onIconRequest(fieldPath, iconName);
+      return;
+    }
+    setPickerOpen((open) => !open);
+  };
 
   return (
     <span
@@ -1071,7 +1167,7 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
           ? (e: ReactKeyboardEvent<HTMLSpanElement>) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setPickerOpen((open) => !open);
+                openPicker();
               }
             }
           : undefined
@@ -1085,7 +1181,7 @@ export function EditableIcon({ fieldPath, iconName, label, className }: Editable
           canEdit
             ? (e: ReactMouseEvent) => {
                 e.stopPropagation();
-                setPickerOpen((open) => !open);
+                openPicker();
               }
             : undefined
         }

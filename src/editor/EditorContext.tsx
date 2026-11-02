@@ -48,6 +48,20 @@ export interface HomeBlocksEditorHandlers {
   onRatingChange: (fieldPath: string, value: number) => void;
   /** Se eligió un ícono nuevo del selector inline. */
   onIconChange: (fieldPath: string, iconName: string) => void;
+  /**
+   * Opcional: si está, tocar un ícono le pide a quien arma el Provider
+   * que abra SU propio selector (el admin usa una ventana grande, con
+   * búsqueda en español y categorías) en vez del popover chico de
+   * `Editable.tsx`. Quien lo abre llama después a `onIconChange` con el
+   * ícono elegido. Si falta, se usa el popover de siempre.
+   */
+  onIconRequest?: (fieldPath: string, currentIcon: string) => void;
+  /**
+   * Opcional: se soltó un archivo arrastrado encima de una imagen
+   * editable (`EditableImageArea`/`EditableImageSlot`). Si falta, esas
+   * imágenes no aceptan arrastrar y soltar.
+   */
+  onImageDrop?: (fieldPath: string, file: File) => void;
   /** Duplicar una fila de una lista (Barra de confianza/¿Por qué elegirnos?). Si falta, no se muestra el botón. */
   onRowDuplicate?: (fieldPath: string) => void;
   /** Borrar una fila de una lista. Si falta, no se muestra el botón. */
