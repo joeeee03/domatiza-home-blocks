@@ -57,8 +57,21 @@ export interface PropertyCardViewData {
    */
   rooms: number | null;
   bedrooms: number | null;
-  /** `agent.whatsapp ?? agent.phone`, ya resuelto. `undefined` = sin botón de WhatsApp visible. */
+  /**
+   * WhatsApp de la INMOBILIARIA (el integrado), ya resuelto por el
+   * contenedor — nunca el número personal del agente: todas las
+   * consultas entran al mismo número y el panel las asigna solo.
+   * `undefined` = sin botón de WhatsApp visible.
+   */
   whatsappNumber: string | undefined;
+  /**
+   * Mensaje precargado, ya armado por el contenedor. En PUBLIC lleva la
+   * referencia de la propiedad ("Ref. #123"), que es lo que usa el panel
+   * para asignarle la consulta al agente de esa propiedad. Opcional para
+   * no romper al canvas del editor de ADMIN: si no viene, se usa el
+   * mensaje genérico con el título.
+   */
+  whatsappMessage?: string;
   /**
    * TARJETAS-4 — tipo + ubicación de la propiedad, ya resueltos por el
    * contenedor (mismo criterio que priceLabel/surfaceLabel: esta vista
@@ -166,7 +179,7 @@ export function PropertyCardView({
 }: PropertyCardViewProps) {
   const badgeClass = property.operation === 'venta' ? 'badge-sale' : 'badge-rent';
   const badgeLabel = property.operation === 'venta' ? 'Venta' : 'Alquiler';
-  const waMessage = `Hola, quiero más información sobre "${property.title}"`;
+  const waMessage = property.whatsappMessage ?? `Hola, quiero más información sobre "${property.title}"`;
   const propertyHref = `/propiedades/${property.slug}`;
 
   // TARJETAS-4 — mismos datos que PropertyCard.tsx (PUBLIC), ya
@@ -225,10 +238,10 @@ export function PropertyCardView({
               <Bed aria-hidden="true" size={16} className="property-specs-icon" /> {property.bedrooms} dorm
             </span>
           )}
-          {cardSpecs.map((spec) => {
+          {cardSpecs.map((spec, idx) => {
             const SpecIcon = resolveIcon(spec.iconName);
             return (
-              <span key={spec.label}>
+              <span key={`${spec.label}-${spec.value}-${idx}`}>
                 <SpecIcon aria-hidden="true" size={16} className="property-specs-icon" /> {spec.value} {spec.label}
               </span>
             );
@@ -238,15 +251,17 @@ export function PropertyCardView({
           <Link href={propertyHref} className="btn btn-secondary btn-sm">
             Ver más
           </Link>
-          <a
-            href={whatsappLink(waMessage, property.whatsappNumber)}
-            className="btn btn-whatsapp btn-sm"
-            target="_blank"
-            rel="noopener"
-            aria-label={`Consultar por WhatsApp sobre ${property.title}`}
-          >
-            <MessageCircle aria-hidden="true" size={18} />
-          </a>
+          {property.whatsappNumber && (
+            <a
+              href={whatsappLink(waMessage, property.whatsappNumber)}
+              className="btn btn-whatsapp btn-sm"
+              target="_blank"
+              rel="noopener"
+              aria-label={`Consultar por WhatsApp sobre ${property.title}`}
+            >
+              <MessageCircle aria-hidden="true" size={18} />
+            </a>
+          )}
         </div>
       </div>
     </PropertyCardRevealView>
