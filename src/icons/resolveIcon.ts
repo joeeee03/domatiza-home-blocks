@@ -85,7 +85,7 @@ export function resolveIcon(name: string | null | undefined): LucideIcon {
   if (name.startsWith('Tb') && isExtraIconName(name)) {
     let icon = extraIconCache.get(name);
     if (!icon) {
-      icon = buildExtraIcon(name, EXTRA_ICONS[name]);
+      icon = buildExtraIcon(name, EXTRA_ICONS[name]!);
       extraIconCache.set(name, icon);
     }
     return icon;
