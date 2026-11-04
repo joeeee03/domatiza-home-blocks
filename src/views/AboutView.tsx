@@ -26,7 +26,7 @@ export function AboutView({ title, paragraphs, imageUrl, companyName, Link, Imag
   const editor = useHomeBlocksEditor();
 
   return (
-    <section className="about-preview">
+    <section className="about-preview fade-in visible">
       <div className="container">
         <div className="about-content">
           <div className="about-text">

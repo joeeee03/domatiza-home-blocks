@@ -9,7 +9,7 @@ export interface BlogPreviewViewProps {
 
 export function BlogPreviewView({ posts, Link, Image }: BlogPreviewViewProps) {
   return (
-    <section className="blog-preview">
+    <section className="blog-preview fade-in visible">
       <div className="container">
         <div className="section-header">
           <h2>Novedades del mercado inmobiliario</h2>

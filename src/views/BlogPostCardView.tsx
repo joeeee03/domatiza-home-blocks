@@ -22,7 +22,7 @@ export interface BlogPostCardViewProps {
 
 export function BlogPostCardView({ post, showMeta = false, Link, Image }: BlogPostCardViewProps) {
   return (
-    <article className="blog-card">
+    <article className="blog-card fade-in visible">
       <div className="blog-image" style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden' }}>
         <Image
           src={post.image}

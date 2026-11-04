@@ -8,14 +8,14 @@ export interface ToolsSectionViewProps {
 /** Etapa 23 (opcional): extracción trivial, igual criterio que `ServicesView`. */
 export function ToolsSectionView({ Link }: ToolsSectionViewProps) {
   return (
-    <section className="tools">
+    <section className="tools fade-in visible">
       <div className="container">
         <div className="section-header">
           <h2>Herramientas pensadas para vos</h2>
         </div>
 
         <div className="tools-grid">
-          <div className="tool-card">
+          <div className="tool-card fade-in visible">
             <div className="tool-icon" aria-hidden="true">
               <Calculator className="tool-icon-svg" />
             </div>
@@ -29,7 +29,7 @@ export function ToolsSectionView({ Link }: ToolsSectionViewProps) {
             </Link>
           </div>
 
-          <div className="tool-card">
+          <div className="tool-card fade-in visible">
             <div className="tool-icon" aria-hidden="true">
               <Landmark className="tool-icon-svg" />
             </div>

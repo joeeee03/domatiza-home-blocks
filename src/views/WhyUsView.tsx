@@ -29,7 +29,7 @@ export function WhyUsView({ items, showCta, companyName, Link }: WhyUsViewProps)
   const editor = useHomeBlocksEditor();
 
   return (
-    <section className="why-us">
+    <section className="why-us fade-in visible">
       <div className="container">
         <div className="section-header">
           <h2>¿Por qué elegir {companyName}?</h2>
@@ -42,7 +42,7 @@ export function WhyUsView({ items, showCta, companyName, Link }: WhyUsViewProps)
               <EditableRow
                 as="div"
                 key={item.id}
-                className="why-card"
+                className="why-card fade-in visible"
                 fieldPath={fieldPath}
                 label="Fila"
                 onDuplicate={editor?.onRowDuplicate ? () => editor.onRowDuplicate!(fieldPath) : undefined}

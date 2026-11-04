@@ -35,7 +35,7 @@ export function TrustBarView({ items }: TrustBarViewProps) {
   const editor = useHomeBlocksEditor();
 
   return (
-    <section className="trust-bar">
+    <section className="trust-bar fade-in visible">
       <div className="container">
         <div className="trust-items">
           {items.map((item) => {

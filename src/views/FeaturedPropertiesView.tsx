@@ -9,7 +9,7 @@ export interface FeaturedPropertiesViewProps {
 
 export function FeaturedPropertiesView({ properties, Link, Image }: FeaturedPropertiesViewProps) {
   return (
-    <section className="featured">
+    <section className="featured fade-in visible">
       <div className="container">
         <div className="section-header">
           <h2>Propiedades destacadas</h2>

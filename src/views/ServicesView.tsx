@@ -34,7 +34,7 @@ export interface ServicesViewProps {
  */
 export function ServicesView({ Link, Image }: ServicesViewProps) {
   return (
-    <section className="services">
+    <section className="services fade-in visible">
       <div className="container">
         <div className="section-header">
           <span className="section-eyebrow">Nuestros servicios</span>
@@ -43,7 +43,7 @@ export function ServicesView({ Link, Image }: ServicesViewProps) {
 
         <div className="services-grid">
           {SERVICES.map((service) => (
-            <Link className="service-card" href={service.href} key={service.title} style={{ position: 'relative' }}>
+            <Link className="service-card fade-in visible" href={service.href} key={service.title} style={{ position: 'relative' }}>
               <Image
                 className="service-card-bg"
                 src={service.image}

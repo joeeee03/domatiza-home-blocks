@@ -22,7 +22,7 @@ export interface CoverageViewProps {
  */
 export function CoverageView({ text, locations, Link }: CoverageViewProps) {
   return (
-    <section className="coverage">
+    <section className="coverage fade-in visible">
       <div className="container">
         <div className="section-header">
           <h2>Operamos en toda la región</h2>

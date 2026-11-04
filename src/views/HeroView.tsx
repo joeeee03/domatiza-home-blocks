@@ -34,7 +34,7 @@ export interface HeroViewProps {
  */
 export function HeroView({ title, subtitle, imageUrl, Link, propertyTypes, locations }: HeroViewProps) {
   return (
-    <section className="hero">
+    <section className="hero fade-in visible">
       <EditableImageArea
         as="div"
         fieldPath="hero.image"
@@ -72,4 +72,4 @@ export function HeroView({ title, subtitle, imageUrl, Link, propertyTypes, locat
       </div>
     </section>
   );
-}
+} 

@@ -10,7 +10,7 @@ export interface FinalCtaViewProps {
 
 export function FinalCtaView({ whatsappNumber, Link }: FinalCtaViewProps) {
   return (
-    <section className="final-cta">
+    <section className="final-cta fade-in visible">
       <div className="container">
         <div className="cta-content">
           <h2>¿Charlamos?</h2>
@@ -39,3 +39,4 @@ export function FinalCtaView({ whatsappNumber, Link }: FinalCtaViewProps) {
     </section>
   );
 }
+  
